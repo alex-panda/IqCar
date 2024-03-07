@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 from skimage import filters, feature
 import matplotlib.pyplot as plt
+import cv2
 
 def IQCar():
     parser = argparse.ArgumentParser(
@@ -16,7 +17,8 @@ def IQCar():
     # Call test harness
     fun_handles = {
         'foo' : bar,
-        'edge_detection' : edge_detection
+        'edge_detection' : edge_detection,
+        'segmentation' : segmentation
     }
     run_tests(args.function_name, fun_handles)
 
@@ -29,39 +31,52 @@ def edge_detection():
     """
     Get orentation/placement of the gameboard (as well as its exit).
     """
-    fig, axs = plt.subplots(2, 2)
     img = Image.open('data/IMG_1.png')
     gray_img = img.convert('L')
-    axs[0, 0].imshow(img)
-    axs[0, 0].set_title('Color Image')
-    axs[0, 1].imshow(gray_img, cmap='gray')
-    axs[0, 1].set_title('Grayscale Image')
 
     img = np.array(img)
     gray_img = np.array(gray_img)
 
-    # Sobel edge detection
-    thresh = 0.20
-    edge_img = filters.sobel(gray_img) > thresh
-    axs[1, 0].imshow(edge_img, cmap='gray')
-    axs[1, 0].set_title('Sobel Edge Detection')
-
     # Canny edge detection
-    sig = 2
-    l_thresh = 50
-    h_thresh = 60
+    sig = 12
+    l_thresh = 5
+    h_thresh = 10
     edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
-    axs[1,1].imshow(edge_img, cmap='gray')
-    axs[1,1].set_title('Canny Edge Detection')
 
-    plt.savefig('outputs/hello_edges.png')
-    plt.show()
+    foo = Image.fromarray(edge_img)
+    foo.show()
+
+    # plt.savefig('outputs/hello_edges.png')
+    # plt.show()
 
 
 def segmentation():
     """
     Finding where the cars are on the gameboard (specefically the goal car).
     """
+    # Retrieved from ChatGPT https://chat.openai.com/share/4d46a1c8-c082-4d77-87c7-9c4fe9f99e2e
+    image = cv2.imread('IMG_1.png')
+
+    # Convert the image to the HSV color space
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Define the lower and upper bounds of the color range
+    lower_red = np.array([0, 100, 100])
+    upper_red = np.array([10, 255, 255])
+
+    # Threshold the image to get only the specified color range
+    mask = cv2.inRange(hsv, lower_red, upper_red)
+
+    # Apply morphological operations (optional)
+    kernel = np.ones((5,5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    # Visualize the result
+    result = cv2.bitwise_and(image, image, mask=mask)
+
+    # Display the original image and the segmented regions
+    cv2.imshow('Original Image', image)
+    cv2.imshow('Segmented Regions', result)
 
 def parse_into_game_board():
     """
