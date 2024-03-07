@@ -2,25 +2,8 @@ import argparse
 from runTests import run_tests
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 
 def runHw4():
-    # runHw4 is the "main" interface that lets you execute all the 
-    # walkthroughs and challenges in this homework. It lists a set of 
-    # functions corresponding to the problems that need to be solved.
-    #
-    # Note that this file also serves as the specifications for the functions 
-    # you are asked to implement. In some cases, your submissions will be 
-    # auto-graded.  Thus, it is critical that you adhere to all the specified 
-    # function signatures.
-    #
-    # Before your submission, make sure you can run runHw4('all') 
-    # without any error.
-    #
-    # Usage:
-    # python runHw4.py                  : list all the registered functions
-    # python runHw4.py 'function_name'  : execute a specific test
-    # python runHw4.py 'all'            : execute all the registered functions
     parser = argparse.ArgumentParser(
         description='Execute a specific test or all tests.')
     parser.add_argument(
@@ -30,10 +13,44 @@ def runHw4():
 
     # Call test harness
     fun_handles = {
-    'foo' : bar
+        'foo' : bar
     }
     run_tests(args.function_name, fun_handles)
 
 def bar():
     print("Hello IQCar!")
     return 1
+
+if __name__ == "__main__":
+    runHw4()
+
+
+# Steps
+
+def segmentation():
+    """
+    Finding where the cars are on the gameboard (specefically the goal car).
+    """
+
+def edge_detection():
+    """
+    Get orentation/placement of the gameboard (as well as its exit).
+    """
+
+def parse_into_game_board():
+    """
+    Turn images into the internal gameboard representation.
+    """
+
+def solve():
+    """
+    Solve the gameboard.
+    """
+
+def simple_gameboard_image():
+    """
+    Generate overlay for image.
+    """
+
+
+
