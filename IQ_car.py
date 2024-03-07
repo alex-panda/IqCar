@@ -29,14 +29,14 @@ if __name__ == "__main__":
 
 # Steps
 
-def segmentation():
-    """
-    Finding where the cars are on the gameboard (specefically the goal car).
-    """
-
 def edge_detection():
     """
     Get orentation/placement of the gameboard (as well as its exit).
+    """
+
+def segmentation():
+    """
+    Finding where the cars are on the gameboard (specefically the goal car).
     """
 
 def parse_into_game_board():

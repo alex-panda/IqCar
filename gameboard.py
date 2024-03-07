@@ -13,5 +13,14 @@ class Gameboard:
         self.exit_y: int = 5 # index of the exit column
 
         self.goal_car: Car = goal_car
-
         self.cars: list[Car] = cars
+
+        # generate ids
+
+        for (i, car) in enumerate(cars):
+            car.id = i
+
+        self.goal_car = -1
+
+    def solve(self):
+        pass
