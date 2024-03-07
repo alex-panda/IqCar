@@ -5,7 +5,7 @@ import numpy as np
 from skimage import filters, feature
 import matplotlib.pyplot as plt
 
-def runHw4():
+def IQCar():
     parser = argparse.ArgumentParser(
         description='Execute a specific test or all tests.')
     parser.add_argument(
@@ -16,7 +16,7 @@ def runHw4():
     # Call test harness
     fun_handles = {
         'foo' : bar,
-        'edge_detect' : edge_detection
+        'edge_detection' : edge_detection
     }
     run_tests(args.function_name, fun_handles)
 
@@ -24,14 +24,7 @@ def bar():
     print("Hello IQCar!")
     return 1
 
-if __name__ == "__main__":
-    runHw4()
-
-    
-    
-
 # Steps
-
 def edge_detection():
     """
     Get orentation/placement of the gameboard (as well as its exit).
@@ -87,3 +80,5 @@ def simple_gameboard_image():
 
 
 
+if __name__ == "__main__":
+    IQCar()
