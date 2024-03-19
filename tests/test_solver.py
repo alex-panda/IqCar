@@ -24,3 +24,11 @@ class TestBoardState:
         s.add_car((0, 0), 3, horiz=False) \
          .add_car((0, 2), 2, horiz=False)
         assert not s.is_valid()
+
+    def test_multiple_overlaps(self):
+        """Test detecting multiple overlaps"""
+        s = BoardState()
+        s.add_car((4, 0), 2, horiz=False)
+        s.add_car((4, 1), 2, horiz=True)
+        s.add_car((4, 1), 2, horiz=False)
+        assert not s.is_valid()
