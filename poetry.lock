@@ -318,7 +318,10 @@ files = [
 [package.dependencies]
 astroid = ">=3.0.1,<=3.1.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
-dill = {version = ">=0.3.7", markers = "python_version >= \"3.12\""}
+dill = [
+    {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
+    {version = ">=0.3.6", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+]
 isort = ">=4.2.5,<5.13.0 || >5.13.0,<6"
 mccabe = ">=0.6,<0.8"
 platformdirs = ">=2.2.0"
@@ -628,5 +631,5 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "7f314d9a4d17876deb1865e499ff4c6d2d20375796af632064d37c87c78bcf2c"
+python-versions = "^3.11"
+content-hash = "010ba341f7980e865880b3bf103a0132b647500f293e32873cec4be3c529ad91"
