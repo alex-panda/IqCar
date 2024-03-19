@@ -1,27 +1,42 @@
 """Solver for IQCar puzzles"""
 
 from collections.abc import Generator
-import ctypes
+from dataclasses import dataclass
+import itertools
+from typing import Iterator
 
 
-bitboard = ctypes.c_uint64
+bitboard = int
 
 
-class BoardState(ctypes.Structure):
+class BoardState:
     """State of some game board"""
-    _fields_ = [
-        ("n_cars", ctypes.c_size_t),
-        ("horiz", bitboard),
-        ("vert", bitboard)
-    ]
-
     # Length of the side of the board.
     BOARD_SIZE = 6
+
+    # Row containing the goal car and exit.
+    EXIT_ROW = 2
+
+    # Length of the goal car.
+    GOAL_CAR_LENGTH = 2
+
+    def __init__(self):
+        self.h_obstacles = []
+        self.v_obstacles = []
+        exit_row_start = self.BOARD_SIZE * self.EXIT_ROW
+        self.goal_car = (1 << exit_row_start + self.GOAL_CAR_LENGTH) - (1 << exit_row_start)
+
+    @property
+    def all_cars(self) -> Iterator[bitboard]:
+        return itertools.chain([self.goal_car], self.h_obstacles, self.v_obstacles)
 
     @property
     def state(self) -> bitboard:
         """A bitfield with car-occupied squares set to 1 and empty squares set to 0"""
-        return self.horiz | self.vert
+        state = 0
+        for obs in self.all_cars:
+            state |= obs
+        return state
 
     def is_valid(self) -> bool:
         """Check if the board is valid.
@@ -29,13 +44,15 @@ class BoardState(ctypes.Structure):
         The board is valid if no two cars overlap.
 
         Returns:
-            True if horizontal and vertical cars do not overlap
+            True if no cars overlap.
         """
-        return not bool(self.horiz & self.vert)
+        overlaps = 0
+        for obs in self.all_cars:
+            overlaps ^= obs
+        return overlaps == self.state
 
-    @classmethod
-    def single_car(
-            cls,
+    def add_car(
+            self,
             pos: tuple[int, int],
             length: int,
             *,
@@ -47,22 +64,28 @@ class BoardState(ctypes.Structure):
         long to fit on the board given its position, a ValueError is raised.
         """
         x, y = pos
-        start_idx = y * cls.BOARD_SIZE + x
+        start_idx = y * self.BOARD_SIZE + x
         if horiz:
-            if x + length > cls.BOARD_SIZE:
+            if x + length > self.BOARD_SIZE:
                 raise ValueError(f"Car is too long for horizontal position "
                                  f"(position: {pos}, length: {length}, "
+                                 "board size: {self.BOARD_SIZE}")
+            self.h_obstacles.append((1 << start_idx + length) - (1 << start_idx))
+        else:
+            if y + length > self.BOARD_SIZE:
+                raise ValueError(f"Car is too long for vertical position "
+                                 f"(position: {pos}, length: {length}, "
                                  "board size: {cls.BOARD_SIZE}")
-            return cls(1, 2 ** (start_idx + length) - (2 ** start_idx), 0)
-        if y + length > cls.BOARD_SIZE:
-            raise ValueError(f"Car is too long for vertical position "
-                             f"(position: {pos}, length: {length}, "
-                             "board size: {cls.BOARD_SIZE}")
-        raise NotImplementedError
+            self.v_obstacles.append(sum(1 << start_idx + i * self.BOARD_SIZE
+                                        for i in range(length)))
+        return self
 
     def plies(self) -> Generator["BoardState", None, None]:
         """Iterate over all single-move perturbations of the game state"""
         raise NotImplementedError
+
+    def __hash__(self) -> int:
+        return int(self.state)
 
     def __str__(self) -> str:
         line = "+-+-+-+-+-+-+\n"
@@ -79,5 +102,20 @@ class BoardState(ctypes.Structure):
         return buf
 
 
+@dataclass
+class Move:
+    car: int
+    horiz: bool
+    dist: int
+
+
 class Solver:
     """IQCar gameboard"""
+    def __init__(self):
+        self.car_states = []
+
+    def add_car(self, pos: tuple[int, int], length: int, horiz: bool):
+        self.car_states.append(BoardState.single_car(pos, length, horiz=horiz))
+
+    def solve(self) -> list[Move]:
+        raise NotImplemented
