@@ -1,4 +1,6 @@
 """Tests for the IQCar solver"""
+import pytest
+
 from iqcar.solver import BoardState, solve
 
 
@@ -89,3 +91,12 @@ class TestSolver:
         s.add_car((1, 3), 3, horiz=True)
         soln = solve(s)
         assert len(soln) == 12
+
+    def test_unsolvable(self):
+        """Test solving an unsolvable puzzle"""
+        s = BoardState()
+        # Two vertical cars blocking the way
+        s.add_car((5, 0), 3, horiz=False)
+        s.add_car((5, 3), 3, horiz=False)
+        with pytest.raises(ValueError):
+            solve(s)
