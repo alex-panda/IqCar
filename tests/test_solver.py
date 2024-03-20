@@ -86,6 +86,6 @@ class TestSolver:
         s = BoardState()
         s.add_car((0, 3), 3, horiz=False)
         s.add_car((3, 0), 3, horiz=False)
-        s.add_car((3, 1), 3, horiz=True)
+        s.add_car((1, 3), 3, horiz=True)
         soln = solve(s)
         assert soln
