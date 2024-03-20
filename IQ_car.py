@@ -4,7 +4,10 @@ from PIL import Image
 import numpy as np
 from skimage import filters, feature
 import matplotlib.pyplot as plt
-import cv2
+from skimage.segmentation import slic
+from skimage.data import astronaut
+from skimage.color import label2rgb
+import skimage as ski
 
 def IQCar():
     parser = argparse.ArgumentParser(
@@ -54,29 +57,32 @@ def segmentation():
     """
     Finding where the cars are on the gameboard (specefically the goal car).
     """
-    # Retrieved from ChatGPT https://chat.openai.com/share/4d46a1c8-c082-4d77-87c7-9c4fe9f99e2e
-    image = cv2.imread('IMG_1.png')
+    # Setting the plot size as 15, 15
+    plt.figure(figsize=(10,10))
+    
+    # Sample Image of scikit-image package
+    img = np.asarray(Image.open('data/IMG_1.png'))
+    
+    # Applying Simple Linear Iterative
+    # Clustering on the image
+    num_seg = 50
+    compact = 50
+    segments = slic(img, n_segments=num_seg, compactness=compact)
+    plt.subplot(1,2,1)
+    
+    # Plotting the original image
+    plt.imshow(img)
+    plt.subplot(1,2,2)
+    
+    # Converts a label image into
+    # an RGB color image for visualizing
+    # the labeled regions. 
+    img_2 = label2rgb(segments,
+                        img,
+                        kind = 'avg')
+    plt.imshow(img_2)
 
-    # Convert the image to the HSV color space
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-    # Define the lower and upper bounds of the color range
-    lower_red = np.array([0, 100, 100])
-    upper_red = np.array([10, 255, 255])
-
-    # Threshold the image to get only the specified color range
-    mask = cv2.inRange(hsv, lower_red, upper_red)
-
-    # Apply morphological operations (optional)
-    kernel = np.ones((5,5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-    # Visualize the result
-    result = cv2.bitwise_and(image, image, mask=mask)
-
-    # Display the original image and the segmented regions
-    cv2.imshow('Original Image', image)
-    cv2.imshow('Segmented Regions', result)
+    plt.show()
 
 def parse_into_game_board():
     """
