@@ -47,7 +47,11 @@ class BoardState:
             self.v_obstacles = list(v_obstacles)
         exit_row_start = self.BOARD_SIZE * self.EXIT_ROW
         if goal_car:
-            if not goal_car & self.EXIT_ROW_MASK:
+            if isinstance(goal_car, tuple):
+                x, y = goal_car
+                goal_car = ((1 << self.GOAL_CAR_LENGTH) - 1) << \
+                    self.BOARD_SIZE * y + x
+            if not (goal_car & self.EXIT_ROW_MASK):
                 raise ValueError(f"Goal car must be in row {self.EXIT_ROW}")
             self.goal_car = goal_car
         else:

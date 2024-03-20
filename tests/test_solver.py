@@ -1,4 +1,6 @@
 """Tests for the IQCar solver"""
+import itertools
+
 import pytest
 
 from iqcar.solver import BoardState, solve
@@ -19,6 +21,14 @@ class TestBoardState:
         s.add_car((0, 0), 2, horiz=True) \
          .add_car((1, 0), 3, horiz=False)
         assert not s.is_valid()
+
+    def test_invalid_goal_car(self):
+        """Test detecting an invalid goal car position"""
+        for car in itertools.product(range(BoardState.BOARD_SIZE), range(BoardState.BOARD_SIZE)):
+            if car[1] == BoardState.EXIT_ROW:
+                continue
+            with pytest.raises(ValueError):
+                _ = BoardState(goal_car=3)
 
     def test_multiple_overlaps(self):
         """Test that multiple overlapping cars are detected"""
