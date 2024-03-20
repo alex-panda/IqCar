@@ -1,9 +1,9 @@
 """Solver for IQCar puzzles"""
 
 from collections.abc import Generator
-from dataclasses import dataclass
+from collections import deque
 import itertools
-from typing import Iterator, Union
+from typing import Iterator, Optional
 
 
 bitboard = int
@@ -28,6 +28,9 @@ class BoardState:
     # Row containing the goal car and exit.
     EXIT_ROW = 2
 
+    # Mask for checking the exit row
+    EXIT_ROW_MASK = ((1 << BOARD_SIZE) - 1) << BOARD_SIZE * EXIT_ROW
+
     # Length of the goal car.
     GOAL_CAR_LENGTH = 2
 
@@ -35,14 +38,32 @@ class BoardState:
     SOLVED_BOARD = ((1 << GOAL_CAR_LENGTH) - 1) << \
         (BOARD_SIZE * EXIT_ROW + BOARD_SIZE - GOAL_CAR_LENGTH)
 
-    def __init__(self):
+    def __init__(self, h_obstacles=None, v_obstacles=None, goal_car=None):
         self.h_obstacles = []
+        if h_obstacles:
+            self.h_obstacles = list(h_obstacles)
         self.v_obstacles = []
+        if v_obstacles:
+            self.v_obstacles = list(v_obstacles)
         exit_row_start = self.BOARD_SIZE * self.EXIT_ROW
-        self.goal_car = (1 << exit_row_start + self.GOAL_CAR_LENGTH) - \
-            (1 << exit_row_start)
+        if goal_car:
+            if not goal_car & self.EXIT_ROW_MASK:
+                raise ValueError(f"Goal car must be in row {self.EXIT_ROW}")
+            self.goal_car = goal_car
+        else:
+            self.goal_car = (1 << exit_row_start + self.GOAL_CAR_LENGTH) - \
+                (1 << exit_row_start)
 
-    @property
+    def with_replacement(self, old: bitboard, new: bitboard) -> "BoardState":
+        cls = type(self)
+        if old == self.goal_car:
+            return cls(self.h_obstacles, self.v_obstacles, new)
+        return cls(
+            [h if h != old else new for h in self.h_obstacles],
+            [v if v != old else new for v in self.v_obstacles],
+            self.goal_car,
+        )
+
     def all_cars(self) -> Iterator[bitboard]:
         return itertools.chain(
             [self.goal_car],
@@ -54,7 +75,7 @@ class BoardState:
     def state(self) -> bitboard:
         """A bitfield with car-occupied squares set to 1 and empty squares set to 0"""
         state = 0
-        for obs in self.all_cars:
+        for obs in self.all_cars():
             state |= obs
         return state
 
@@ -66,7 +87,7 @@ class BoardState:
         Returns:
             True if no cars overlap.
         """
-        return sum(self.all_cars) == self.state
+        return sum(self.all_cars()) == self.state
 
     def add_car(
             self,
@@ -97,13 +118,32 @@ class BoardState:
                                         for i in range(length)))
         return self
 
-    def plies(self) -> Generator["Ply", None, None]:
-        """Iterate over all single-move perturbations of the game state"""
-        for car in itertools.chain([self.goal_car], self.h_obstacles):
-            start_idx = first_set_bit(car)
-            if start_idx % self.BOARD_SIZE != 0:
-                # car can move right; moving right is a left shift
-                yield Ply(self, car, car << 1)
+    def plies(self) -> Generator["BoardState", None, None]:
+        """Iterate over all valid single-move perturbations of the game state"""
+        def _plies():
+            for car in itertools.chain([self.goal_car], self.h_obstacles):
+                start_idx = first_set_bit(car)
+                car_length = car.bit_count()
+                if start_idx % self.BOARD_SIZE > 0:
+                    # car can move left; moving left is a right shift
+                    yield self.with_replacement(car, car >> 1)
+                if (start_idx + car_length) % self.BOARD_SIZE > 0:
+                    # car can move right; moving right is a left shift
+                    yield self.with_replacement(car, car << 1)
+
+            for car in self.v_obstacles:
+                start_idx = first_set_bit(car)
+                car_length = car.bit_count()
+                if start_idx // self.BOARD_SIZE > 0:
+                    # car can move up; moving up is a right shift by the size of the board
+                    yield self.with_replacement(car, car >> self.BOARD_SIZE)
+                if start_idx // self.BOARD_SIZE < self.BOARD_SIZE - car_length:
+                    # car can move down; moving down is a left shift by the size of the board
+                    yield self.with_replacement(car, car << self.BOARD_SIZE)
+
+        for ply in _plies():
+            if ply.is_valid():
+                yield ply
 
     def is_solved(self):
         return self.is_valid() and self.goal_car == self.SOLVED_BOARD
@@ -117,7 +157,7 @@ class BoardState:
         for y in range(self.BOARD_SIZE):
             buf += "|"
             for x in range(self.BOARD_SIZE):
-                if (2 ** (y * self.BOARD_SIZE + x)) & state:
+                if (1 << (y * self.BOARD_SIZE + x)) & state:
                     buf += "o"
                 else:
                     buf += " "
@@ -129,28 +169,35 @@ class BoardState:
         return self.bitboard_to_string(self.state)
 
 
-@dataclass
-class Ply:
-    """A lightweight gameboard ply"""
-    state: Union[BoardState, "Ply"]
-    old: bitboard
-    new: bitboard
+def solve(board: BoardState) -> list[bitboard]:
+    """Solve an IQCar puzzle.
 
+    Simply do breadth-first search over the game state space for a valid
+    solution.
+    """
+    paths: dict[BoardState, Optional[BoardState]] = {board: None}
+    moves: deque[BoardState] = deque([board])
 
-@dataclass
-class Move:
-    car: int
-    horiz: bool
-    dist: int
+    while True:
+        print(moves)
+        if not moves:
+            raise ValueError("Ran out of moves to try")
+        curr = moves.pop()
+        if curr.is_solved():
+            path = []
+            p: Optional[BoardState] = curr
+            while p is not None:
+                path.append(p.state)
+                p = paths[p]
+            path.reverse()
+            return path
 
+        next_moves = list(curr.plies())
+        if not next_moves:
+            continue
 
-class Solver:
-    """IQCar gameboard"""
-    def __init__(self):
-        self.car_states = []
-
-    def add_car(self, pos: tuple[int, int], length: int, horiz: bool):
-        self.car_states.append(BoardState.single_car(pos, length, horiz=horiz))
-
-    def solve(self) -> list[Move]:
-        raise NotImplemented
+        for move in next_moves:
+            if move in paths:
+                continue
+            paths[move] = curr
+            moves.appendleft(move)
