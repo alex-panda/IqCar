@@ -151,6 +151,9 @@ class BoardState:
     def __hash__(self) -> int:
         return int(self.state)
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, type(self)) and other.state == self.state
+
     def bitboard_to_string(self, state: bitboard) -> str:
         line = "+-+-+-+-+-+-+\n"
         buf = str(line)
@@ -179,7 +182,6 @@ def solve(board: BoardState) -> list[bitboard]:
     moves: deque[BoardState] = deque([board])
 
     while True:
-        print(moves)
         if not moves:
             raise ValueError("Ran out of moves to try")
         curr = moves.pop()
