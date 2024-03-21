@@ -59,6 +59,15 @@ class BoardState:
                 (1 << exit_row_start)
 
     def with_replacement(self, old: bitboard, new: bitboard) -> "BoardState":
+        """Create a new BoardState from this BoardState, replacing some car with another car
+
+        Args:
+            old: the bitboard containing the car to replace
+            new: the bitboard containing the new car
+
+        Returns:
+            the new BoardState with the replacement
+        """
         cls = type(self)
         if old == self.goal_car:
             return cls(self.h_obstacles, self.v_obstacles, new)
@@ -69,6 +78,7 @@ class BoardState:
         )
 
     def all_cars(self) -> Iterator[bitboard]:
+        """Get an iterator over all the cars in this board state"""
         return itertools.chain(
             [self.goal_car],
             self.h_obstacles,
@@ -104,6 +114,14 @@ class BoardState:
 
         The given position is the top left corner of the car. If the car is too
         long to fit on the board given its position, a ValueError is raised.
+
+        Args:
+            pos: the x and y coordinates of the top left corner of the car
+            length: length of the car
+            horiz: if True, the car is horizontal; if False, then the car is vertical
+
+        Returns:
+            this BoardState with the car addeed
         """
         x, y = pos
         start_idx = y * self.BOARD_SIZE + x
@@ -123,7 +141,13 @@ class BoardState:
         return self
 
     def plies(self) -> Generator["BoardState", None, None]:
-        """Iterate over all valid single-move perturbations of the game state"""
+        """Iterate over all valid single-move perturbations of the game state
+
+        Each ply is a new game state which is one move away from this game state.
+
+        Generates:
+            BoardStates which are single-move perturbations of this state
+        """
         def _plies():
             for car in itertools.chain([self.goal_car], self.h_obstacles):
                 start_idx = first_set_bit(car)
@@ -149,7 +173,8 @@ class BoardState:
             if ply.is_valid():
                 yield ply
 
-    def is_solved(self):
+    def is_solved(self) -> bool:
+        """Check if the game board is solved."""
         return self.is_valid() and self.goal_car == self.SOLVED_BOARD
 
     def __hash__(self) -> int:
@@ -158,13 +183,22 @@ class BoardState:
     def __eq__(self, other: object) -> bool:
         return isinstance(other, type(self)) and other.state == self.state
 
-    def bitboard_to_string(self, state: bitboard) -> str:
+    @classmethod
+    def bitboard_to_string(cls, state: bitboard) -> str:
+        """Represent a bitboard as a string.
+
+        Args:
+            state: a bitboard of some game state
+
+        Returns:
+            game state laid out with cars represented with "o" characters
+        """
         line = "+-+-+-+-+-+-+\n"
         buf = str(line)
-        for y in range(self.BOARD_SIZE):
+        for y in range(cls.BOARD_SIZE):
             buf += "|"
-            for x in range(self.BOARD_SIZE):
-                if (1 << (y * self.BOARD_SIZE + x)) & state:
+            for x in range(cls.BOARD_SIZE):
+                if (1 << (y * cls.BOARD_SIZE + x)) & state:
                     buf += "o"
                 else:
                     buf += " "
