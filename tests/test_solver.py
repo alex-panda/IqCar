@@ -3,6 +3,8 @@ import itertools
 
 import pytest
 
+from iqcar.car import Car
+from iqcar.gameboard import Gameboard
 from iqcar.solver import BoardState, solve
 
 
@@ -98,6 +100,13 @@ class TestBoardState:
         s = BoardState()
         p = s.with_replacement(s.goal_car, s.goal_car << 1)
         assert len(list(p.plies())) == 2
+
+    def test_convert_gameboard_boardstate_round_trip(self):
+        """Test converting a Gameboard to a BoardState and back"""
+        gb = Gameboard(goal_car=Car(0, 2, True, 2), cars=[])
+        bs = BoardState.from_gameboard(gb)
+        new_gb = bs.to_gameboard()
+        assert gb == new_gb
 
 
 class TestSolver:

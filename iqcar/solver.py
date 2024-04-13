@@ -5,19 +5,14 @@ from collections import deque
 import itertools
 from typing import Iterator, Optional
 
+from iqcar.car import Car
 from iqcar.gameboard import Gameboard
 
 
 bitboard = int
 
 
-def bitboard_from_gameboard(gb: Gameboard):
-    gc = gb.goal_car
-    goal_car_xy = gc.x, gb.y
-    bs = BoardState(goal_car=goal_car_xy)
-
-
-def first_set_bit(x):
+def first_set_bit(bb: bitboard) -> int:
     """Get the first set bit of a bitfield."""
     if not hasattr(first_set_bit, '_lut'):
         first_set_bit._lut = {
@@ -25,7 +20,7 @@ def first_set_bit(x):
             for i in range(64)
         }
 
-    return first_set_bit._lut[x & -x]
+    return first_set_bit._lut[bb & -bb]
 
 
 class BoardState:
@@ -68,9 +63,10 @@ class BoardState:
                 x, y = goal_car
                 goal_car = ((1 << self.goal_car_length) - 1) << \
                     self.board_size * y + x
-            if goal_car & self.exit_row_mask != goal_car:
-                raise ValueError(f"Goal car must be entirely in row {self.exit_row}")
             self.goal_car = goal_car
+            if goal_car & self.exit_row_mask != goal_car:
+                print(self)
+                raise ValueError(f"Goal car must be entirely in row {self.exit_row}")
         else:
             self.goal_car = (1 << exit_row_start + self.goal_car_length) - \
                 (1 << exit_row_start)
@@ -94,10 +90,14 @@ class BoardState:
             self.goal_car,
         )
 
-    def all_cars(self) -> Iterator[bitboard]:
-        """Get an iterator over all the cars in this board state"""
+    def all_cars(self, with_goal: bool = True) -> Iterator[bitboard]:
+        """Get an iterator over all the cars in this board state
+
+        Args:
+            with_goal: if True, include the goal car; otherwise, exclude it
+        """
         return itertools.chain(
-            [self.goal_car],
+            [self.goal_car] if with_goal else [],
             self.h_obstacles,
             self.v_obstacles
         )
@@ -199,6 +199,44 @@ class BoardState:
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, type(self)) and other.state == self.state
+
+    @classmethod
+    def from_gameboard(cls, gb: Gameboard) -> 'BoardState':
+        """Create a BoardState from a Gameboard
+
+        Args:
+            gb: a Gameboard object
+
+        Returns:
+            a BoardState representing the given Gameboard
+        """
+        gc = gb.goal_car
+        goal_car_xy = gc.x, gc.y
+        if gb.width != gb.height:
+            raise ValueError("BoardState assumes width and height are equal"
+                             f"(Gameboard width: {gb.width}, height: {gb.height})")
+        bs = cls(
+            goal_car=goal_car_xy,
+            exit_row=gb.exit_x,  # Gameboard uses "x" to refer to rows
+            goal_car_length=gc.length,
+        )
+        for car in gb.cars:
+            bs.add_car((car.y, car.x), car.length, horiz=car.horizontal)
+        return bs
+
+    def to_gameboard(self) -> Gameboard:
+        """Create a Gameboard from this Boardstate"""
+        def make_car(car):
+            pos = first_set_bit(car)
+            y, x = divmod(pos, self.board_size)
+            length = car.bit_count()
+            horiz_mask = 2 * length - 1 << pos
+            horiz = horiz_mask & car == horiz_mask
+            return Car(x, y, horiz, length)
+
+        goal_car = make_car(self.goal_car)
+        cars = [make_car(car) for car in self.all_cars(with_goal=False)]
+        return Gameboard(goal_car, cars)
 
     def to_string(self, state: Optional[bitboard] = None) -> str:
         """Represent a bitboard as a string.

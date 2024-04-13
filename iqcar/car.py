@@ -40,3 +40,8 @@ class Car:
             else:
                 yield (self.x + i, self.y)
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return (self.x, self.y, self.horizontal, self.length) == \
+            (other.x, other.y, other.horizontal, other.length)

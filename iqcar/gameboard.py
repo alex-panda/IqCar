@@ -22,5 +22,10 @@ class Gameboard:
 
         self.goal_car.id = -1
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.goal_car == other.goal_car and self.cars == other.cars
+
     def solve(self):
         pass
