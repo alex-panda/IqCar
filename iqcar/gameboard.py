@@ -1,5 +1,5 @@
 """A game board."""
-from car import Car
+from iqcar.car import Car
 
 
 class Gameboard:

@@ -5,8 +5,16 @@ from collections import deque
 import itertools
 from typing import Iterator, Optional
 
+from iqcar.gameboard import Gameboard
+
 
 bitboard = int
+
+
+def bitboard_from_gameboard(gb: Gameboard):
+    gc = gb.goal_car
+    goal_car_xy = gc.x, gb.y
+    bs = BoardState(goal_car=goal_car_xy)
 
 
 def first_set_bit(x):
@@ -22,40 +30,49 @@ def first_set_bit(x):
 
 class BoardState:
     """State of some game board"""
-    # Length of the side of the board.
-    BOARD_SIZE = 6
 
-    # Row containing the goal car and exit.
-    EXIT_ROW = 2
+    def __init__(
+            self,
+            h_obstacles=None,
+            v_obstacles=None,
+            goal_car=None,
+            board_size=6,
+            goal_car_length=2,
+            exit_row=2,
+    ):
+        """Constructor for a BoardState"""
+        # Length of the side of the board.
+        self.board_size = board_size
 
-    # Mask for checking the exit row
-    EXIT_ROW_MASK = ((1 << BOARD_SIZE) - 1) << BOARD_SIZE * EXIT_ROW
+        # Row containing the goal car and exit.
+        self.exit_row = exit_row
 
-    # Length of the goal car.
-    GOAL_CAR_LENGTH = 2
+        # Mask for checking the exit row
+        self.exit_row_mask = ((1 << self.board_size) - 1) << self.board_size * self.exit_row
 
-    # Solved board
-    SOLVED_BOARD = ((1 << GOAL_CAR_LENGTH) - 1) << \
-        (BOARD_SIZE * EXIT_ROW + BOARD_SIZE - GOAL_CAR_LENGTH)
+        # Length of the goal car.
+        self.goal_car_length = 2
 
-    def __init__(self, h_obstacles=None, v_obstacles=None, goal_car=None):
+        # Solved board
+        self.solved_board = ((1 << self.goal_car_length) - 1) << \
+        (self.board_size * self.exit_row + self.board_size - self.goal_car_length)
         self.h_obstacles = []
         if h_obstacles:
             self.h_obstacles = list(h_obstacles)
         self.v_obstacles = []
         if v_obstacles:
             self.v_obstacles = list(v_obstacles)
-        exit_row_start = self.BOARD_SIZE * self.EXIT_ROW
+        exit_row_start = self.board_size * self.exit_row
         if goal_car:
             if isinstance(goal_car, tuple):
                 x, y = goal_car
-                goal_car = ((1 << self.GOAL_CAR_LENGTH) - 1) << \
-                    self.BOARD_SIZE * y + x
-            if not (goal_car & self.EXIT_ROW_MASK):
-                raise ValueError(f"Goal car must be in row {self.EXIT_ROW}")
+                goal_car = ((1 << self.goal_car_length) - 1) << \
+                    self.board_size * y + x
+            if goal_car & self.exit_row_mask != goal_car:
+                raise ValueError(f"Goal car must be entirely in row {self.exit_row}")
             self.goal_car = goal_car
         else:
-            self.goal_car = (1 << exit_row_start + self.GOAL_CAR_LENGTH) - \
+            self.goal_car = (1 << exit_row_start + self.goal_car_length) - \
                 (1 << exit_row_start)
 
     def with_replacement(self, old: bitboard, new: bitboard) -> "BoardState":
@@ -124,19 +141,19 @@ class BoardState:
             this BoardState with the car addeed
         """
         x, y = pos
-        start_idx = y * self.BOARD_SIZE + x
+        start_idx = y * self.board_size + x
         if horiz:
-            if x + length > self.BOARD_SIZE:
+            if x + length > self.board_size:
                 raise ValueError(f"Car is too long for horizontal position "
                                  f"(position: {pos}, length: {length}, "
-                                 "board size: {self.BOARD_SIZE}")
+                                 "board size: {self.board_size}")
             self.h_obstacles.append((1 << start_idx + length) - (1 << start_idx))
         else:
-            if y + length > self.BOARD_SIZE:
+            if y + length > self.board_size:
                 raise ValueError(f"Car is too long for vertical position "
                                  f"(position: {pos}, length: {length}, "
                                  "board size: {cls.BOARD_SIZE}")
-            self.v_obstacles.append(sum(1 << start_idx + i * self.BOARD_SIZE
+            self.v_obstacles.append(sum(1 << start_idx + i * self.board_size
                                         for i in range(length)))
         return self
 
@@ -152,22 +169,22 @@ class BoardState:
             for car in itertools.chain([self.goal_car], self.h_obstacles):
                 start_idx = first_set_bit(car)
                 car_length = car.bit_count()
-                if start_idx % self.BOARD_SIZE > 0:
+                if start_idx % self.board_size > 0:
                     # car can move left; moving left is a right shift
                     yield self.with_replacement(car, car >> 1)
-                if (start_idx + car_length) % self.BOARD_SIZE > 0:
+                if (start_idx + car_length) % self.board_size > 0:
                     # car can move right; moving right is a left shift
                     yield self.with_replacement(car, car << 1)
 
             for car in self.v_obstacles:
                 start_idx = first_set_bit(car)
                 car_length = car.bit_count()
-                if start_idx // self.BOARD_SIZE > 0:
+                if start_idx // self.board_size > 0:
                     # car can move up; moving up is a right shift by the size of the board
-                    yield self.with_replacement(car, car >> self.BOARD_SIZE)
-                if start_idx // self.BOARD_SIZE < self.BOARD_SIZE - car_length:
+                    yield self.with_replacement(car, car >> self.board_size)
+                if start_idx // self.board_size < self.board_size - car_length:
                     # car can move down; moving down is a left shift by the size of the board
-                    yield self.with_replacement(car, car << self.BOARD_SIZE)
+                    yield self.with_replacement(car, car << self.board_size)
 
         for ply in _plies():
             if ply.is_valid():
@@ -175,7 +192,7 @@ class BoardState:
 
     def is_solved(self) -> bool:
         """Check if the game board is solved."""
-        return self.is_valid() and self.goal_car == self.SOLVED_BOARD
+        return self.is_valid() and self.goal_car == self.solved_board
 
     def __hash__(self) -> int:
         return int(self.state)
@@ -183,22 +200,20 @@ class BoardState:
     def __eq__(self, other: object) -> bool:
         return isinstance(other, type(self)) and other.state == self.state
 
-    @classmethod
-    def bitboard_to_string(cls, state: bitboard) -> str:
+    def to_string(self, state: Optional[bitboard] = None) -> str:
         """Represent a bitboard as a string.
-
-        Args:
-            state: a bitboard of some game state
 
         Returns:
             game state laid out with cars represented with "o" characters
         """
+        if not state:
+            state = self.state
         line = "+-+-+-+-+-+-+\n"
         buf = str(line)
-        for y in range(cls.BOARD_SIZE):
+        for y in range(self.board_size):
             buf += "|"
-            for x in range(cls.BOARD_SIZE):
-                if (1 << (y * cls.BOARD_SIZE + x)) & state:
+            for x in range(self.board_size):
+                if (1 << (y * self.board_size + x)) & state:
                     buf += "o"
                 else:
                     buf += " "
@@ -207,7 +222,7 @@ class BoardState:
         return buf
 
     def __str__(self):
-        return self.bitboard_to_string(self.state)
+        return self.to_string()
 
 
 def solve(board: BoardState) -> list[bitboard]:

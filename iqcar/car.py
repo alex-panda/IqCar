@@ -30,7 +30,7 @@ class Car:
         """
         return (self.x, self.y)
 
-    def points(self) -> Generator[(int, int)]:
+    def points(self) -> Generator[tuple[int, int], None, None]:
         """
         Returns all points that this `Car` occupies.
         """
