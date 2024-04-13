@@ -91,7 +91,7 @@ def segmentation():
     
     
     # Sample Image of scikit-image package
-    img = np.asarray(Image.open('data/IMG_1.png'))
+    img = np.asarray(Image.open('data/IMG_1.jpg'))
     img = img_as_float(img[::2, ::2])
     segmented = segment_image(img)
     ## Anotha one
