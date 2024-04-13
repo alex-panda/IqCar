@@ -4,10 +4,12 @@ from PIL import Image
 import numpy as np
 from skimage import filters, feature
 import matplotlib.pyplot as plt
-from skimage.segmentation import slic
-from skimage.data import astronaut
+from skimage.segmentation import slic, quickshift
 from skimage.color import label2rgb
 import skimage as ski
+from sklearn.cluster import MeanShift, estimate_bandwidth
+from skimage.segmentation import mark_boundaries
+from skimage.util import img_as_float
 
 def IQCar():
     parser = argparse.ArgumentParser(
@@ -57,32 +59,83 @@ def segmentation():
     """
     Finding where the cars are on the gameboard (specefically the goal car).
     """
-    # Setting the plot size as 15, 15
-    plt.figure(figsize=(10,10))
+    
     
     # Sample Image of scikit-image package
     img = np.asarray(Image.open('data/IMG_1.png'))
+    img = img_as_float(img[::2, ::2])
+    segmented = segment_image(img)
+    ## Anotha one
+
+    # # flatten the image
+    # flat_image = img.reshape((-1,3))
+    # flat_image = np.float32(flat_image)
+
+    # # meanshift
+    # bandwidth = estimate_bandwidth(flat_image, quantile=.06, n_samples=3000)
+    # ms = MeanShift(bandwidth, max_iter=800, bin_seeding=True)
+    # ms.fit(flat_image)
+    # labeled=ms.labels_
+
+
+    # # get number of segments
+    # segments = np.unique(labeled)
+
+    # # get the average color of each segment
+    # total = np.zeros((segments.shape[0], 3), dtype=float)
+    # count = np.zeros(total.shape, dtype=float)
+    # for i, label in enumerate(labeled):
+    #     total[label] = total[label] + flat_image[i]
+    #     count[label] += 1
+    # avg = total/count
+    # avg = np.uint8(avg)
+
+    # # cast the labeled image into the corresponding average color
+    # res = avg[labeled]
+    # result = res.reshape((img.shape))
+
+    # # show the result
+    # plt.imshow(result)
+
+def segment_image(img : np.array):
+    # Setting the plot size as 15, 15
+    plt.figure(figsize=(10,10))
+    plt.subplot(2,2,1)
+    # Plotting the original image
+    plt.imshow(img)
+    plt.subplot(2,2,2)
     
     # Applying Simple Linear Iterative
     # Clustering on the image
-    num_seg = 50
-    compact = 50
-    segments = slic(img, n_segments=num_seg, compactness=compact)
-    plt.subplot(1,2,1)
-    
-    # Plotting the original image
-    plt.imshow(img)
-    plt.subplot(1,2,2)
+    num_seg = 250
+    compact = 10
+    print("starting slic")
+    segments_slic = slic(img, n_segments=num_seg, compactness=compact)
+    print("end slic")
     
     # Converts a label image into
     # an RGB color image for visualizing
     # the labeled regions. 
-    img_2 = label2rgb(segments,
+    img_2 = label2rgb(segments_slic,
                         img,
                         kind = 'avg')
     plt.imshow(img_2)
+    plt.subplot(2,2,3)
+    print("starting quickshift")
+    kernal = 3
+    dist = 6
+    rat = 0.5
+    segments_quickshift = quickshift(img, kernel_size=kernal, max_dist=dist, ratio=rat, convert2lab=True)
+    print("end quickshift")
+    img_3 = label2rgb(segments_quickshift,
+                        img,
+                        kind = 'avg')
 
+    plt.imshow(img_3)
+    # plt.subplot(2,2,4)
     plt.show()
+    return img_2
+
 
 def parse_into_game_board():
     """
