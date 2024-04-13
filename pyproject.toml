@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["iqcar"]
+
+[project]
+name = "iqcar"
+version = "0.1.0"
+authors = [
+    {name = "Jack Stanek", email = "jrstanek@wisc.edu"},
+]
+description = "Solver for IQCar puzzles"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["Rush Hour", "IQ Car"]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = []
+
+[project.scripts]
+iqcar = "iqcar.main:main"
