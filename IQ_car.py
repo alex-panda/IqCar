@@ -106,9 +106,7 @@ def segmentation():
     # Converts a label image into
     # an RGB color image for visualizing
     # the labeled regions. 
-    img_2 = label2rgb(segments,
-                        img,
-                        kind = 'avg')
+    img_2 = label2rgb(segments, img, kind = 'avg')
     plt.imshow(img_2)
 
     plt.show()
