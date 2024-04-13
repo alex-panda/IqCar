@@ -16,8 +16,9 @@ from skimage.util import img_as_float
 from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line
 from skimage.draw import line as draw_line
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
-from skimage.filters import gaussian
+from skimage.filters import gaussian, threshold_otsu, threshold_minimum
 from matplotlib import cm
+from skimage.morphology import dilation, erosion
 
 GOAL_CAR_HEX = "FF0000"
 
@@ -74,18 +75,21 @@ def edge_detection():
     Get orentation/placement of the gameboard (as well as its exit).
     return mask of bounding box of gameboard
     """
-    for i in range(1, 12):
-        img = Image.open(f'data/IMG_{i}.jpg')
+    for i in range(13, 18):
+        img = Image.open(f'data/IMG_{i}.png')
         gray_img = img.convert('L')
 
         img = np.array(img)
         gray_img = np.array(gray_img)
 
+        thresh_min = threshold_otsu(gray_img)
+        binary_img = gray_img > thresh_min
+
         # Canny edge detection
         sig = 12
         l_thresh = 2
         h_thresh = 10
-        edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
+        edge_img = feature.canny(binary_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
 
         nonzero_y, nonzero_x = np.nonzero(edge_img)
         # top left
@@ -102,14 +106,22 @@ def edge_detection():
 
             
         # # Generating figure 1
-        # fig, axes = plt.subplots(1, 3, figsize=(15, 6))
-        # ax = axes.ravel()
+        fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+        ax = axes.ravel()
 
-        # ax[0].imshow(img, cmap=cm.gray)
-        # ax[0].set_title('Input image')
+        ax[0].imshow(img, cmap=cm.gray)
+        ax[0].set_title('Input image')
 
-        # ax[1].imshow(edge_img, cmap=cm.gray)
-        # ax[1].set_title('Canny edges')
+        ax[1].imshow(edge_img, cmap=cm.gray)
+        ax[1].set_title('Canny edges')
+        ax[1].plot(
+            min_y, min_x, color='cyan', marker='o', linestyle='None', markersize=6
+        )
+        ax[1].plot(
+            max_y, max_x, color='cyan', marker='o', linestyle='None', markersize=6
+        )
+
+        ax[2].imshow(binary_img)
 
         # ax[2].imshow(edge_img * 0)
         # for line in lines:
@@ -119,46 +131,141 @@ def edge_detection():
         # ax[2].set_ylim((img.shape[0], 0))
         # ax[2].set_title('Probabilistic Hough')
 
+        for a in ax:
+            a.set_axis_off()
+
+        plt.tight_layout()
+        plt.savefig(f'outputs/probablistic_hough_{i}.png')
+        plt.show()
+    return mask
+
+def corner_detection():
+    for i in range(13, 18):
+        img = Image.open(f'data/IMG_{i}.png')
+        gray_img = img.convert('L')
+        img = np.array(img)
+        gray_img = np.array(gray_img)
+
+        print("foo")
+        thresh_min = threshold_otsu(gray_img)
+        binary_img = gray_img > thresh_min
+        binary_img = clean_binary_image(binary_img)
+
+        # fig, ax = plt.subplots(3, 2, figsize=(10, 10))
+
+        # ax[0, 0].imshow(img, cmap=plt.cm.gray)
+        # ax[0, 0].set_title('Original')
+
+        # ax[0, 1].hist(img.ravel(), bins=256)
+        # ax[0, 1].set_title('Histogram')
+
+        # ax[1, 0].imshow(binary_img, cmap=plt.cm.gray)
+        # ax[1, 0].set_title('Thresholded (min)')
+
+        # ax[1, 1].hist(img.ravel(), bins=256)
+        # ax[1, 1].axvline(thresh_min, color='r')
+
+        # ax[2, 0].imshow(binary_img, cmap=plt.cm.gray)
+        # ax[2, 0].set_title('Thresholded (min)')
+
+        # Canny edge detection
+        sig = 12
+        l_thresh = 2
+        h_thresh = 10
+        edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
+        # Show edge image
+        # fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+        # ax = axes.ravel()
+
+        # ax[0].imshow(img, cmap=cm.gray)
+        # ax[0].set_title('Input image')
+
+        # ax[1].imshow(edge_img, cmap=cm.gray)
+        # ax[1].set_title('Canny edges')
         # for a in ax:
         #     a.set_axis_off()
 
         # plt.tight_layout()
         # plt.savefig(f'outputs/probablistic_hough_{i}.png')
         # plt.show()
-    return mask
 
-def corner_detection():
-    for i in range(1, 12):
-        img = Image.open(f'data/IMG_{i}.jpg')
-        gray_img = img.convert('L')
-        img = np.array(img)
-        gray_img = np.array(gray_img)
-        # denoise
-        gray_img = gaussian(gray_img, sigma=0.1)
-        plt.imshow(gray_img, cmap=cm.gray)
-        plt.show()
-
-        sig = 12
-        l_thresh = 2
-        h_thresh = 10
-        edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
-
+        print(np.unique(edge_img))
         print("start corner detection")
-        threshold = 0.01
-        corners = corner_harris(gray_img)
-        print("harris done")
-        coords = corner_peaks(corners, min_distance=1,threshold_abs=0.001, num_peaks=50)
-        print("peaks done")
-        coords_subpix = corner_subpix(gray_img, coords, window_size=7)
+        # not_binary = np.invert(binary_img)
+        # corners = corner_harris(not_binary)
+        # print("harris done")
+        # coords = corner_peaks(corners, min_distance=1,threshold_abs=0.001, num_peaks=50)
+        # print("peaks done")
+        # coords_subpix = corner_subpix(not_binary, coords, window_size=7)
+        center_x, center_y = center_of_mass(binary_img)
+        size_y, size_x = binary_img.shape
+        print(f"center (x,y) {center_x}, {center_y}")
+        print(f"shape (x,y) {size_x}, {size_y}")
+
+        # top left
+        nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, 0:center_x])
+        tl_y = np.min(nonzero_y, axis=0)
+        tl_x = np.min(nonzero_x, axis=0)
+        # top right
+        nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, center_x:size_x])
+        tr_y = np.min(nonzero_y, axis=0)
+        tr_x = np.max(nonzero_x, axis=0) + center_x
+        # bottom left
+        nonzero_y, nonzero_x = np.nonzero(binary_img[center_y:size_y, 0:center_x])
+        bl_y = np.max(nonzero_y, axis=0) + center_y
+        bl_x = np.min(nonzero_x, axis=0)
+        # bottom right
+        nonzero_y, nonzero_x = np.nonzero(binary_img[center_y:size_y, center_x:size_x])
+        br_y = np.max(nonzero_y, axis=0) + center_y
+        br_x = np.max(nonzero_x, axis=0) + center_x
+
+        coords = np.array([[tl_x, tl_y], [tr_x, tr_y], [bl_x, bl_y],[br_x, br_y]])
+        print(coords)
+
         print("end corner detection")
 
-        fig, ax = plt.subplots()
-        ax.imshow(img, cmap=plt.cm.gray)
-        ax.plot(
-            coords[:, 1], coords[:, 0], color='cyan', marker='o', linestyle='None', markersize=6
+        fig, ax = plt.subplots(1, 2, figsize=(15, 6))
+        ax[0].imshow(img, cmap=plt.cm.gray)
+        ax[0].plot(
+            center_x, center_y, color='cyan', marker='o', linestyle='None', markersize=6
         )
-        ax.plot(coords_subpix[:, 1], coords_subpix[:, 0], '+r', markersize=15)
+        ax[0].plot(
+            coords[0][0],coords[0][1], color='red', marker='o', linestyle='None', markersize=6
+        )
+        ax[0].plot(
+            coords[1][0],coords[1][1], color='green', marker='o', linestyle='None', markersize=6
+        )
+        ax[0].plot(
+            coords[2][0],coords[2][1], color='yellow', marker='o', linestyle='None', markersize=6
+        )
+        ax[0].plot(
+            coords[3][0],coords[3][1], color='pink', marker='o', linestyle='None', markersize=6
+        )
+        # for x,y in coords:
+        #     ax[0].plot(
+        #         x, y, color='cyan', marker='o', linestyle='None', markersize=6
+        #     )
+        # ax[0].plot(coords_subpix[:, 1], coords_subpix[:, 0], '+r', markersize=15)
+
+        ax[1].imshow(binary_img, cmap=cm.gray)
         plt.show()
+
+def clean_binary_image(binary_image, k=25):
+    footprint = np.ones((k, k))
+
+    print("cleaning binary_image")
+    fig, ax = plt.subplots(1, 2)
+    processed_img = erosion(binary_image, footprint=footprint)
+    # ax[0].imshow(processed_img, cmap=cm.gray)
+    # ax[0].set_title('After Erosion')
+
+    processed_img = dilation(processed_img, footprint=footprint)
+    # ax[1].imshow(processed_img, cmap=cm.gray)
+    # ax[1].set_title('After Dilation')
+
+    # plt.show()
+    return processed_img
+
 
 # method interpolate_points retrieved from chatgpt
 def interpolate_points(point1, point2, n):
@@ -221,15 +328,29 @@ def bounding_box_mask(x1, y1, x2, y2, img):
 
     return mask
 
+def center_of_mass(binary_image):
+    # Create an array of coordinates for each pixel
+    y_coords, x_coords = np.nonzero(binary_image)
+
+    # Compute the center of mass
+    center_y = np.mean(y_coords)
+    center_x = np.mean(x_coords)
+
+    return (int(center_x), int(center_y))
+
 def segmentation():
     """
     Finding where the cars are on the gameboard (specefically the goal car).
     """
     # Sample Image of scikit-image package
-    img = np.asarray(Image.open('data/IMG_1.jpg'))
+    img = np.asarray(Image.open('data/IMG_4.jpg'))
     img = img_as_float(img[::2, ::2])
     labels, segmented_img = segment_image(img)
-    mask = get_edge_mask(Image.fromarray(img))
+    # mask = get_edge_mask(Image.fromarray(img))
+
+    plt.imshow(segmented_img)
+    plt.savefig(f'outputs/segmentation_4.png')
+    plt.show()
 
 def segment_image(img : np.array):
     """
