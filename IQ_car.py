@@ -1,4 +1,5 @@
 import argparse
+from typing import Tuple
 from runTests import run_tests
 from PIL import Image
 import numpy as np
@@ -7,6 +8,8 @@ import matplotlib.pyplot as plt
 from skimage.segmentation import slic, quickshift
 from skimage.color import label2rgb
 import skimage as ski
+import pygame.camera
+from PIL import Image
 from sklearn.cluster import MeanShift, estimate_bandwidth
 from skimage.segmentation import mark_boundaries
 from skimage.util import img_as_float
@@ -21,15 +24,41 @@ def IQCar():
 
     # Call test harness
     fun_handles = {
-        'foo' : bar,
+        'capture_image' : capture_image,
         'edge_detection' : edge_detection,
         'segmentation' : segmentation
     }
     run_tests(args.function_name, fun_handles)
 
-def bar():
-    print("Hello IQCar!")
-    return 1
+def capture_image(cam:int=0, dims:Tuple[int, int]=(640, 480), show:bool=True) -> Image.Image | None:
+    """
+    Captures an image from a webcam and returns it as a PIL image.
+
+    `cam`: the index of the camera to capture the image from
+    `dims`: the dimensions of the image you want
+    `show`: whether to call `Image.show()` to show the image before returning it
+
+    returns the image if captured or `None` if there was no camera `cam` to capture the image
+    """
+
+    pygame.camera.init()
+    camlist = pygame.camera.list_cameras()
+
+    if len(camlist) >= cam:
+        cam = pygame.camera.Camera(camlist[0], dims)
+
+        cam.start()
+        image = cam.get_image()
+
+        pil_string_image = pygame.image.tostring(image, "RGBA", False)
+        im = Image.frombytes("RGBA", dims, pil_string_image)
+    
+        if show:
+            im.show()
+
+        return im
+
+    return None
 
 # Steps
 def edge_detection():
