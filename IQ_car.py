@@ -128,12 +128,7 @@ def segmentation():
 
 def segment_image(img : np.array):
     # Setting the plot size as 15, 15
-    plt.figure(figsize=(10,10))
-    plt.subplot(2,2,1)
     # Plotting the original image
-    plt.imshow(img)
-    plt.subplot(2,2,2)
-    
     # Applying Simple Linear Iterative
     # Clustering on the image
     num_seg = 250
@@ -148,20 +143,29 @@ def segment_image(img : np.array):
     img_2 = label2rgb(segments_slic,
                         img,
                         kind = 'avg')
-    plt.imshow(img_2)
-    plt.subplot(2,2,3)
     print("starting quickshift")
     kernal = 3
     dist = 6
     rat = 0.5
-    segments_quickshift = quickshift(img, kernel_size=kernal, max_dist=dist, ratio=rat, convert2lab=True)
+    segments_quick = quickshift(img, kernel_size=kernal, max_dist=dist, ratio=rat, convert2lab=True)
     print("end quickshift")
-    img_3 = label2rgb(segments_quickshift,
-                        img,
-                        kind = 'avg')
+    # img_3 = label2rgb(segments_quick,
+    #                     img,
+    #                     kind = 'avg')
 
-    plt.imshow(img_3)
-    # plt.subplot(2,2,4)
+    fig, ax = plt.subplots(2, 2, figsize=(10, 10), sharex=True, sharey=True)
+
+    ax[0, 0].imshow(mark_boundaries(img, segments_slic))
+    ax[0, 0].set_title("SLIC_boundries")
+    ax[0, 1].imshow(img_2)
+    ax[0, 1].set_title('SLIC segmented')
+    ax[1, 0].imshow(mark_boundaries(img, segments_quick))
+    ax[1, 0].set_title('Quickshift')
+    ax[1, 1].imshow(img)
+    ax[1, 1].set_title("Original")
+
+    for a in ax.ravel():
+        a.set_axis_off()
     plt.show()
     return img_2
 
