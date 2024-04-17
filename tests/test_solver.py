@@ -103,7 +103,12 @@ class TestBoardState:
 
     def test_convert_gameboard_boardstate_round_trip(self):
         """Test converting a Gameboard to a BoardState and back"""
-        gb = Gameboard(goal_car=Car(0, 2, True, 2), cars=[])
+        cars = [
+            Car(0, 1, True, 2),
+            Car(2, 3, False, 3),
+            Car(0, 5, False, 2),
+        ]
+        gb = Gameboard(goal_car=Car(2, 0, True, 2), cars=cars)
         bs = BoardState.from_gameboard(gb)
         new_gb = bs.to_gameboard()
         assert gb == new_gb

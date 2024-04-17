@@ -211,7 +211,7 @@ class BoardState:
             a BoardState representing the given Gameboard
         """
         gc = gb.goal_car
-        goal_car_xy = gc.x, gc.y
+        goal_car_xy = gc.y, gc.x
         if gb.width != gb.height:
             raise ValueError("BoardState assumes width and height are equal"
                              f"(Gameboard width: {gb.width}, height: {gb.height})")
@@ -228,7 +228,7 @@ class BoardState:
         """Create a Gameboard from this Boardstate"""
         def make_car(car):
             pos = first_set_bit(car)
-            y, x = divmod(pos, self.board_size)
+            x, y = divmod(pos, self.board_size)
             length = car.bit_count()
             horiz_mask = 2 * length - 1 << pos
             horiz = horiz_mask & car == horiz_mask
