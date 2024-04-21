@@ -19,7 +19,16 @@ license = {text = "BSD-3-Clause"}
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
-dependencies = []
+dependencies = [
+    "scikit-image",
+    "scikit-learn",
+    "matplotlib",
+    "numpy",
+    "pygame",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
 
 [project.scripts]
 iqcar = "iqcar.main:main"
