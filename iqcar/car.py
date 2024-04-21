@@ -30,7 +30,7 @@ class Car:
         """
         return (self.x, self.y)
 
-    def points(self) -> Generator[(int, int)]:
+    def points(self) -> Generator[tuple[int, int], None, None]:
         """
         Returns all points that this `Car` occupies.
         """
@@ -40,3 +40,8 @@ class Car:
             else:
                 yield (self.x + i, self.y)
 
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __hash__(self):
+        return hash((self.x, self.y, self.horizontal, self.length))

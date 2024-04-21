@@ -1,5 +1,5 @@
 """A game board."""
-from car import Car
+from iqcar.car import Car
 
 
 class Gameboard:
@@ -21,6 +21,11 @@ class Gameboard:
             car.id = i
 
         self.goal_car.id = -1
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.goal_car == other.goal_car and self.cars == other.cars
 
     def solve(self):
         pass
