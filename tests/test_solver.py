@@ -3,6 +3,8 @@ import itertools
 
 import pytest
 
+from iqcar.car import Car
+from iqcar.gameboard import Gameboard
 from iqcar.solver import BoardState, solve
 
 
@@ -12,7 +14,6 @@ class TestBoardState:
         s = BoardState()
         s.add_car((0, 0), 2, horiz=True) \
          .add_car((5, 0), 3, horiz=False)
-        print(s)
         assert s.is_valid()
 
     def test_is_not_valid(self):
@@ -24,11 +25,26 @@ class TestBoardState:
 
     def test_invalid_goal_car(self):
         """Test detecting an invalid goal car position"""
-        for car in itertools.product(range(BoardState.BOARD_SIZE), range(BoardState.BOARD_SIZE)):
-            if car[1] == BoardState.EXIT_ROW:
-                continue
-            with pytest.raises(ValueError):
-                _ = BoardState(goal_car=3)
+        board_size = 6
+        exit_row = 2
+        goal_car_length = 2
+        for car in itertools.product(range(board_size), range(board_size)):
+            if car[1] == exit_row and car[0] + goal_car_length <= board_size:
+                _ = BoardState(
+                    goal_car=car,
+                    board_size=board_size,
+                    exit_row=exit_row,
+                    goal_car_length=goal_car_length
+                )
+            else:
+                with pytest.raises(ValueError):
+                    print(car)
+                    b = BoardState(
+                        goal_car=car,
+                        board_size=board_size,
+                        exit_row=exit_row,
+                        goal_car_length=goal_car_length
+                    )
 
     def test_multiple_overlaps(self):
         """Test that multiple overlapping cars are detected"""
@@ -48,8 +64,8 @@ class TestBoardState:
     def test_is_solved(self):
         """Test that solved boards are detected"""
         s = BoardState()
-        s.goal_car = ((1 << s.GOAL_CAR_LENGTH) - 1) << \
-            (s.BOARD_SIZE * (s.EXIT_ROW + 1) - s.GOAL_CAR_LENGTH)
+        s.goal_car = ((1 << s.goal_car_length) - 1) << \
+            (s.board_size * (s.exit_row + 1) - s.goal_car_length)
         assert s.is_solved()
 
     def test_enumerate_plies(self):
@@ -73,17 +89,29 @@ class TestBoardState:
         s = BoardState()
         s.add_car((0, 0), car_length, horiz=True)
         p = s.with_replacement(s.h_obstacles[0], 3 << 1)
-        for i in range(s.BOARD_SIZE - car_length):
+        for i in range(s.board_size - car_length):
             p_prime = p.with_replacement(p.h_obstacles[0], 3 << i + 1)
             p = p_prime
 
-        assert (p.state ^ 3 << s.BOARD_SIZE - car_length) == p.goal_car
+        assert (p.state ^ 3 << s.board_size - car_length) == p.goal_car
 
     def test_generating_plies_from_ply(self):
         """Test that plies can generate more plies"""
         s = BoardState()
         p = s.with_replacement(s.goal_car, s.goal_car << 1)
         assert len(list(p.plies())) == 2
+
+    def test_convert_gameboard_boardstate_round_trip(self):
+        """Test converting a Gameboard to a BoardState and back"""
+        cars = [
+            Car(0, 1, True, 2),
+            Car(2, 3, False, 3),
+            Car(0, 5, False, 2),
+        ]
+        gb = Gameboard(goal_car=Car(2, 0, True, 2), cars=cars)
+        bs = BoardState.from_gameboard(gb)
+        new_gb = bs.to_gameboard()
+        assert gb == new_gb
 
 
 class TestSolver:
