@@ -151,57 +151,17 @@ def corner_detection():
         binary_img = gray_img > thresh_min
         binary_img = clean_binary_image(binary_img)
 
-        # fig, ax = plt.subplots(3, 2, figsize=(10, 10))
-
-        # ax[0, 0].imshow(img, cmap=plt.cm.gray)
-        # ax[0, 0].set_title('Original')
-
-        # ax[0, 1].hist(img.ravel(), bins=256)
-        # ax[0, 1].set_title('Histogram')
-
-        # ax[1, 0].imshow(binary_img, cmap=plt.cm.gray)
-        # ax[1, 0].set_title('Thresholded (min)')
-
-        # ax[1, 1].hist(img.ravel(), bins=256)
-        # ax[1, 1].axvline(thresh_min, color='r')
-
-        # ax[2, 0].imshow(binary_img, cmap=plt.cm.gray)
-        # ax[2, 0].set_title('Thresholded (min)')
-
         # Canny edge detection
         sig = 12
         l_thresh = 2
         h_thresh = 10
         edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
-        # Show edge image
-        # fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-        # ax = axes.ravel()
-
-        # ax[0].imshow(img, cmap=cm.gray)
-        # ax[0].set_title('Input image')
-
-        # ax[1].imshow(edge_img, cmap=cm.gray)
-        # ax[1].set_title('Canny edges')
-        # for a in ax:
-        #     a.set_axis_off()
-
-        # plt.tight_layout()
-        # plt.savefig(f'outputs/probablistic_hough_{i}.png')
-        # plt.show()
 
         print(np.unique(edge_img))
-        print("start corner detection")
-        # not_binary = np.invert(binary_img)
-        # corners = corner_harris(not_binary)
-        # print("harris done")
-        # coords = corner_peaks(corners, min_distance=1,threshold_abs=0.001, num_peaks=50)
-        # print("peaks done")
-        # coords_subpix = corner_subpix(not_binary, coords, window_size=7)
         center_x, center_y = center_of_mass(binary_img)
         size_y, size_x = binary_img.shape
-        print(f"center (x,y) {center_x}, {center_y}")
-        print(f"shape (x,y) {size_x}, {size_y}")
 
+        # TODO: snap to nearest white pixel
         # top left
         nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, 0:center_x])
         tl_y = np.min(nonzero_y, axis=0)
@@ -241,12 +201,6 @@ def corner_detection():
         ax[0].plot(
             coords[3][0],coords[3][1], color='pink', marker='o', linestyle='None', markersize=6
         )
-        # for x,y in coords:
-        #     ax[0].plot(
-        #         x, y, color='cyan', marker='o', linestyle='None', markersize=6
-        #     )
-        # ax[0].plot(coords_subpix[:, 1], coords_subpix[:, 0], '+r', markersize=15)
-
         ax[1].imshow(binary_img, cmap=cm.gray)
         plt.show()
 
@@ -293,28 +247,6 @@ def interpolate_points(point1, point2, n):
     
     return interpolated_points
 
-def get_edge_mask(img : Image):
-    gray_img = img.convert('L')
-
-    img = np.array(img)
-    gray_img = np.array(gray_img)
-
-    # Canny edge detection
-    sig = 12
-    l_thresh = 2
-    h_thresh = 10
-    edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
-
-    nonzero_y, nonzero_x = np.nonzero(edge_img)
-    # top left
-    min_y = np.min(nonzero_y, axis=0)
-    min_x = np.min(nonzero_x, axis=0)
-    # bottom right
-    max_y = np.max(nonzero_y, axis=0)
-    max_x = np.max(nonzero_x, axis=0)
-    mask = bounding_box_mask(min_x, min_y, max_x, max_y, img)
-    return mask
-
 def bounding_box_mask(x1, y1, x2, y2, img):
     # Create an empty binary mask
     mask = np.zeros_like(img, dtype=np.int8)
@@ -343,13 +275,13 @@ def segmentation():
     Finding where the cars are on the gameboard (specefically the goal car).
     """
     # Sample Image of scikit-image package
-    img = np.asarray(Image.open('data/IMG_4.jpg'))
+    img = np.asarray(Image.open('data/IMG_14.png'))
     img = img_as_float(img[::2, ::2])
     labels, segmented_img = segment_image(img)
     # mask = get_edge_mask(Image.fromarray(img))
 
     plt.imshow(segmented_img)
-    plt.savefig(f'outputs/segmentation_4.png')
+    plt.savefig(f'outputs/segmentation_14.png')
     plt.show()
 
 def segment_image(img : np.array):
