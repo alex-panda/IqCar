@@ -1,29 +1,20 @@
-import argparse
-from typing import Tuple
-from runTests import run_tests
 from PIL import Image
 import numpy as np
-from skimage import filters, feature
-import matplotlib.pyplot as plt
-from skimage.segmentation import slic, quickshift
+from skimage.segmentation import slic
 from skimage.color import label2rgb
-import skimage as ski
-import pygame.camera
 from PIL import Image
-from sklearn.cluster import MeanShift, estimate_bandwidth
-from skimage.segmentation import mark_boundaries
-from skimage.util import img_as_float
-from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line
-from skimage.draw import line as draw_line
-from skimage.feature import corner_harris, corner_subpix, corner_peaks
-from skimage.filters import gaussian, threshold_otsu, threshold_minimum
-from matplotlib import cm
+from skimage.filters import threshold_otsu
 from skimage.morphology import dilation, erosion
-from scipy import stats
 
 # ============== HELPERS ==============
 
 def clean_binary_image(binary_image, k=25):
+    """
+    Cleans a binary image using erosion and then dilation. default footpring is 25x25 square.
+
+    parameters binary_image, k=25
+    returns processed_image
+    """
     footprint = np.ones((k, k))
 
     processed_img = erosion(binary_image, footprint=footprint)
@@ -32,6 +23,12 @@ def clean_binary_image(binary_image, k=25):
     return processed_img
 
 def center_of_mass(binary_image):
+    """
+    Return the center of mass of a binary image. Expecting a cleaned binary image of gameboard.
+
+    parameters binary_image
+    returns (center_x, centery_y)
+    """
     # Create an array of coordinates for each pixel
     y_coords, x_coords = np.nonzero(binary_image)
 
@@ -70,6 +67,9 @@ def interpolate_points(point1, point2, n):
 
 def corner_detection(img : Image):
     """
+    finds the corners of the gameboard assuming the gameboard is oriented roughly straight on and not rotated.
+    
+    parameter img
     return corners as top left, top right, bottom left, bottom right
     """
     gray_img = img.convert('L')
