@@ -86,7 +86,7 @@ def edge_detection():
 
 def segmentation():
     """
-    Finding where the cars are on the gameboard (specefically the goal car).
+    Finding where the cars are on the gameboard (specifically the goal car).
     """
     
     
