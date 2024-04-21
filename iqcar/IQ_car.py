@@ -203,6 +203,7 @@ def corner_detection():
         )
         ax[1].imshow(binary_img, cmap=cm.gray)
         plt.show()
+        return coords
 
 def clean_binary_image(binary_image, k=25):
     footprint = np.ones((k, k))
@@ -219,7 +220,6 @@ def clean_binary_image(binary_image, k=25):
 
     # plt.show()
     return processed_img
-
 
 # method interpolate_points retrieved from chatgpt
 def interpolate_points(point1, point2, n):
