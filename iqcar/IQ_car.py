@@ -272,7 +272,7 @@ def center_of_mass(binary_image):
 
 def segmentation():
     """
-    Finding where the cars are on the gameboard (specefically the goal car).
+    Finding where the cars are on the gameboard (specifically the goal car).
     """
     # Sample Image of scikit-image package
     img = np.asarray(Image.open('data/IMG_14.png'))
