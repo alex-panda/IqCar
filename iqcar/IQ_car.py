@@ -19,6 +19,7 @@ from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.filters import gaussian, threshold_otsu, threshold_minimum
 from matplotlib import cm
 from skimage.morphology import dilation, erosion
+from scipy import stats
 
 GOAL_CAR_HEX = "FF0000"
 
@@ -140,6 +141,9 @@ def edge_detection():
     return mask
 
 def corner_detection():
+    """
+    return corners as top left, top right, bottom left, bottom right
+    """
     for i in range(13, 18):
         img = Image.open(f'data/IMG_{i}.png')
         gray_img = img.convert('L')
@@ -246,6 +250,33 @@ def interpolate_points(point1, point2, n):
     interpolated_points = [(x1 + i * dx, y1 + i * dy) for i in range(n)]
     
     return interpolated_points
+
+def identify_colors_of_chunks(transformed_segmented_image, transformed_corners):
+    """
+    Expecting a transformed_segmented_image and transformed_corners (4x2 array)
+
+    Returns modal color of each chunk between the corners as a 6x6 array
+    """
+
+    top_points = interpolate_points(transformed_corners[0], transformed_corners[1], 7)
+    bottom_points  = interpolate_points(transformed_corners[2], transformed_corners[3], 7)
+
+    colors = np.zeros([6,6,3])
+
+    for i in range(len(top_points) - 1):
+        tr_points = interpolate_points(top_points[i], bottom_points[i], 7)
+        br_points = interpolate_points(top_points[i+1], bottom_points[i+1], 7)
+
+        for j in range(len(tr_points) - 1):
+            chunk = transformed_segmented_image[tr_points[j]:br_points[j+1]]
+            flat_chunk = chunk.reshape(-1, 3)
+            unique, counts = np.unique(flat_chunk, return_counts=True)
+            mode = unique[np.argmax(counts)]
+            colors[j][i] = mode
+
+    return colors
+
+
 
 def bounding_box_mask(x1, y1, x2, y2, img):
     # Create an empty binary mask
