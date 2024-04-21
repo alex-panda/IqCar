@@ -262,35 +262,34 @@ class BoardState:
     def __str__(self):
         return self.to_string()
 
+    def solve(self) -> list[bitboard]:
+        """Solve an IQCar puzzle.
 
-def solve(board: BoardState) -> list[bitboard]:
-    """Solve an IQCar puzzle.
+        Simply do breadth-first search over the game state space for a valid
+        solution.
+        """
+        paths: dict[BoardState, Optional[BoardState]] = {self: None}
+        moves: deque[BoardState] = deque([self])
 
-    Simply do breadth-first search over the game state space for a valid
-    solution.
-    """
-    paths: dict[BoardState, Optional[BoardState]] = {board: None}
-    moves: deque[BoardState] = deque([board])
+        while True:
+            if not moves:
+                raise ValueError("Ran out of moves to try")
+            curr = moves.pop()
+            if curr.is_solved():
+                path = []
+                p: Optional[BoardState] = curr
+                while p is not None:
+                    path.append(p.state)
+                    p = paths[p]
+                path.reverse()
+                return path
 
-    while True:
-        if not moves:
-            raise ValueError("Ran out of moves to try")
-        curr = moves.pop()
-        if curr.is_solved():
-            path = []
-            p: Optional[BoardState] = curr
-            while p is not None:
-                path.append(p.state)
-                p = paths[p]
-            path.reverse()
-            return path
-
-        next_moves = list(curr.plies())
-        if not next_moves:
-            continue
-
-        for move in next_moves:
-            if move in paths:
+            next_moves = list(curr.plies())
+            if not next_moves:
                 continue
-            paths[move] = curr
-            moves.appendleft(move)
+
+            for move in next_moves:
+                if move in paths:
+                    continue
+                paths[move] = curr
+                moves.appendleft(move)

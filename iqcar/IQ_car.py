@@ -1,5 +1,8 @@
 import argparse
+import math
 from typing import Tuple
+from iqcar.car import Car
+from iqcar.gameboard import Gameboard
 from runTests import run_tests
 from PIL import Image
 import numpy as np
@@ -314,6 +317,115 @@ def parse_into_game_board(labels, segmented_img):
 
     # edge mask
 
+def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
+    """
+    Creates a gameboard from the given colors.
+
+    Assumptions:
+     - there is always at least one background square
+     - cars are either 2 units long or 3
+
+    Args:
+        colors: a 6x6x3 numpy array containing the colors of the game board
+    Returns:
+        Gameboard: the gameboard
+    """
+    red = np.array([240, 70, 50], dtype=np.float64)
+
+    def is_eq(one: np.ndarray | None, two: np.ndarray | None, e: float) -> bool:
+        if one is None: return False
+        if two is None: return False
+        if np.abs(two - one) > e: return True
+        return False
+
+    def get(array: np.ndarray, y: int, x: int) -> np.ndarray | None:
+        if 0 <= y <= array.shape[0]:
+            if 0 <= x <= array.shape[1]:
+                return array[y, x, :]
+        return None
+
+    def color_dist(color1: np.ndarray | None, color2: np.ndarray | None) -> float:
+        if color1 is None: return np.inf
+        if color2 is None: return np.inf
+        c1r, c1g, c1b = np.array(color1, dtype=np.float64)
+        c2r, c2g, c2b = np.array(color2, dtype=np.float64)
+
+        rmean = (c1r + c2r) / 2.0
+        r = c1r - c2r
+        g = c1g - c2g
+        b = c1b - c2b
+        return math.sqrt((((512+rmean)*r*r) >> 8) + (4*g*g) + (((767-rmean)*b*b) >> 8))
+
+    background_squares: set[Tuple[int, int]] = set()
+
+    e = 20
+
+    # first, weed out the background squares
+    # All background squares are assumed to be a shade of white
+    for y in colors.shape[0]:
+        for x in colors.shape[1]:
+            color = colors[y, x, :]
+            if (np.abs(color[0] - color[1]) <= e) and (np.abs(color[1] - color[2]) <= e) and (np.abs(color[2] - color[0]) <= e):
+                background_squares.add((y, x))
+
+    closest_red = np.inf
+    goal_car = Car(0, 0, False, 2)
+    cars: list[Car] = []
+
+    for y in colors.shape[0]:
+        for x in colors.shape[1]:
+
+            if (y, x) in background_squares:
+                continue
+
+            color = colors[y, x, :]
+
+            closest_dist = np.inf
+            closest_offset = (0, 0)
+            closest_color = np.array([0, 0, 0], dtype=np.float64)
+            for offset in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                ny, nx = (y+offset[0], x+offset[1])
+
+                if (ny, nx) in background_squares:
+                    continue
+
+                color2 = get(colors, ny, nx)
+                dist = color_dist(color, color2)
+
+                if dist < closest_dist:
+                    closest_offset = offset
+                    closest_dist = dist
+                    closest_color = color2
+
+            if np.inf <= closest_dist:
+                # no second square found
+                continue
+
+            # second square found so check for third
+
+            nny, nnx = ny+closest_offset[0], nx+closest_offset[1]
+            color3 = get(colors, nny, nnx)
+
+            if color_dist(color2, color3) <= 10:
+                # include the third color
+                background_squares.add((y, x))
+                background_squares.add((ny, nx))
+                background_squares.add((nny, nnx))
+                car = Car(min(x, nx, nnx), min(y, ny, nny), closest_offset[0] != 0, 3)
+                if color_dist(closest_color, red) < closest_red:
+                    goal_car = car
+                cars.append(car)
+
+            else:
+                # car is only 2 squares long
+                background_squares.add((y, x))
+                background_squares.add((ny, nx))
+                car = Car(min(x, nx), min(y, ny), closest_offset[0] != 0, 2)
+                if color_dist(closest_color, red) < closest_red:
+                    goal_car = car
+                cars.append(car)
+
+    return Gameboard(goal_car, cars)
 
 def solve():
     """
@@ -329,3 +441,5 @@ def simple_gameboard_image():
 
 if __name__ == "__main__":
     IQCar()
+
+

@@ -1,5 +1,6 @@
 """A game board."""
 from iqcar.car import Car
+from iqcar.solver import BoardState
 
 
 class Gameboard:
@@ -27,5 +28,5 @@ class Gameboard:
             return False
         return self.goal_car == other.goal_car and self.cars == other.cars
 
-    def solve(self):
-        pass
+    def into_state(self) -> BoardState:
+        return BoardState.from_gameboard(self) 
