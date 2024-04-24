@@ -129,15 +129,16 @@ def segment_image(img : np.array):
 
 
 
-def identify_colors_of_chunks(transformed_segmented_image, transformed_corners):
+def identify_colors_of_chunks(transformed_segmented_image : np.array):
     """
     Expecting a transformed_segmented_image and transformed_corners (4x2 array)
 
     Returns modal color of each chunk between the corners as a 6x6 array
     """
 
-    top_points = interpolate_points(transformed_corners[0], transformed_corners[1], 7)
-    bottom_points  = interpolate_points(transformed_corners[2], transformed_corners[3], 7)
+    shape = transformed_segmented_image.shape
+    top_points = interpolate_points(0, shape[1], 7) # x - col
+    bottom_points  = interpolate_points(0, shape[0], 7) # y - row
 
     colors = np.zeros([6,6,3])
 
