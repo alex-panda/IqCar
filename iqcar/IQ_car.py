@@ -311,7 +311,7 @@ def segment_image(img : np.array):
                         kind = 'avg')
     return segments_slic, img_2
 
-def normalize_board_square(img: np.ndarray) -> np.ndarray
+def normalize_board_square(img: np.ndarray) -> np.ndarray:
     """Transform a game board image into a square.
 
     Args:
