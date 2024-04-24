@@ -2,30 +2,25 @@ import argparse
 import math
 from typing import Tuple
 
-from iqcar.car import Car
-from iqcar.gameboard import Gameboard
-from runTests import run_tests
-
-from PIL import Image
-import numpy as np
-from skimage import filters, feature
 import matplotlib.pyplot as plt
-from skimage.segmentation import slic, quickshift
-from skimage.color import label2rgb
-import skimage as ski
-import pygame.camera
+from matplotlib import cm
+import numpy as np
 from PIL import Image
-from sklearn.cluster import MeanShift, estimate_bandwidth
-from skimage.segmentation import mark_boundaries
-from skimage.util import img_as_float
-from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line, ProjectiveTransform, warp
+import pygame.camera
+from skimage import filters, feature
+from skimage.color import label2rgb
 from skimage.draw import line as draw_line
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.filters import gaussian, threshold_otsu, threshold_minimum
-from matplotlib import cm
 from skimage.morphology import dilation, erosion
+from skimage.segmentation import mark_boundaries, slic, quickshift
+from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line, ProjectiveTransform, warp
+from skimage.util import img_as_float
+from sklearn.cluster import MeanShift, estimate_bandwidth
 from scipy import stats
 
+from iqcar.car import Car
+from iqcar.gameboard import Gameboard
 from iqcar.runTests import run_tests
 
 GOAL_CAR_HEX = "FF0000"
