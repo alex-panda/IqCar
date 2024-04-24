@@ -1,6 +1,6 @@
 import argparse
 from typing import Tuple
-from runTests import run_tests
+
 from PIL import Image
 import numpy as np
 from skimage import filters, feature
@@ -13,12 +13,14 @@ from PIL import Image
 from sklearn.cluster import MeanShift, estimate_bandwidth
 from skimage.segmentation import mark_boundaries
 from skimage.util import img_as_float
-from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line
+from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line, ProjectiveTransform, warp
 from skimage.draw import line as draw_line
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.filters import gaussian, threshold_otsu, threshold_minimum
 from matplotlib import cm
 from skimage.morphology import dilation, erosion
+
+from iqcar.runTests import run_tests
 
 GOAL_CAR_HEX = "FF0000"
 
@@ -139,71 +141,42 @@ def edge_detection():
         plt.show()
     return mask
 
-def corner_detection():
-    for i in range(13, 18):
-        img = Image.open(f'data/IMG_{i}.png')
-        gray_img = img.convert('L')
-        img = np.array(img)
-        gray_img = np.array(gray_img)
+def corner_detection(gray_img: np.ndarray):
+    """Find corners of the game board"""
+    thresh_min = threshold_otsu(gray_img)
+    binary_img = gray_img > thresh_min
+    binary_img = clean_binary_image(binary_img)
 
-        print("foo")
-        thresh_min = threshold_otsu(gray_img)
-        binary_img = gray_img > thresh_min
-        binary_img = clean_binary_image(binary_img)
+    # Canny edge detection
+    sig = 12
+    l_thresh = 2
+    h_thresh = 10
+    edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
 
-        # Canny edge detection
-        sig = 12
-        l_thresh = 2
-        h_thresh = 10
-        edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
+    center_x, center_y = center_of_mass(binary_img)
+    size_y, size_x = binary_img.shape
 
-        print(np.unique(edge_img))
-        center_x, center_y = center_of_mass(binary_img)
-        size_y, size_x = binary_img.shape
+    # TODO: snap to nearest white pixel
+    # top left
+    nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, 0:center_x])
+    tl_y = np.min(nonzero_y, axis=0)
+    tl_x = np.min(nonzero_x, axis=0)
+    # top right
+    nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, center_x:size_x])
+    tr_y = np.min(nonzero_y, axis=0)
+    tr_x = np.max(nonzero_x, axis=0) + center_x
+    # bottom left
+    nonzero_y, nonzero_x = np.nonzero(binary_img[center_y:size_y, 0:center_x])
+    bl_y = np.max(nonzero_y, axis=0) + center_y
+    bl_x = np.min(nonzero_x, axis=0)
+    # bottom right
+    nonzero_y, nonzero_x = np.nonzero(binary_img[center_y:size_y, center_x:size_x])
+    br_y = np.max(nonzero_y, axis=0) + center_y
+    br_x = np.max(nonzero_x, axis=0) + center_x
 
-        # TODO: snap to nearest white pixel
-        # top left
-        nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, 0:center_x])
-        tl_y = np.min(nonzero_y, axis=0)
-        tl_x = np.min(nonzero_x, axis=0)
-        # top right
-        nonzero_y, nonzero_x = np.nonzero(binary_img[0:center_y, center_x:size_x])
-        tr_y = np.min(nonzero_y, axis=0)
-        tr_x = np.max(nonzero_x, axis=0) + center_x
-        # bottom left
-        nonzero_y, nonzero_x = np.nonzero(binary_img[center_y:size_y, 0:center_x])
-        bl_y = np.max(nonzero_y, axis=0) + center_y
-        bl_x = np.min(nonzero_x, axis=0)
-        # bottom right
-        nonzero_y, nonzero_x = np.nonzero(binary_img[center_y:size_y, center_x:size_x])
-        br_y = np.max(nonzero_y, axis=0) + center_y
-        br_x = np.max(nonzero_x, axis=0) + center_x
+    coords = np.array([[tl_x, tl_y], [tr_x, tr_y], [bl_x, bl_y],[br_x, br_y]])
 
-        coords = np.array([[tl_x, tl_y], [tr_x, tr_y], [bl_x, bl_y],[br_x, br_y]])
-        print(coords)
-
-        print("end corner detection")
-
-        fig, ax = plt.subplots(1, 2, figsize=(15, 6))
-        ax[0].imshow(img, cmap=plt.cm.gray)
-        ax[0].plot(
-            center_x, center_y, color='cyan', marker='o', linestyle='None', markersize=6
-        )
-        ax[0].plot(
-            coords[0][0],coords[0][1], color='red', marker='o', linestyle='None', markersize=6
-        )
-        ax[0].plot(
-            coords[1][0],coords[1][1], color='green', marker='o', linestyle='None', markersize=6
-        )
-        ax[0].plot(
-            coords[2][0],coords[2][1], color='yellow', marker='o', linestyle='None', markersize=6
-        )
-        ax[0].plot(
-            coords[3][0],coords[3][1], color='pink', marker='o', linestyle='None', markersize=6
-        )
-        ax[1].imshow(binary_img, cmap=cm.gray)
-        plt.show()
-        return coords
+    return coords
 
 def clean_binary_image(binary_image, k=25):
     footprint = np.ones((k, k))
@@ -305,14 +278,65 @@ def segment_image(img : np.array):
                         kind = 'avg')
     return segments_slic, img_2
 
+def normalize_board_square(img: np.ndarray) -> np.ndarray
+    """Transform a game board image into a square.
 
-def parse_into_game_board(labels, segmented_img):
+    Args:
+        img: the image from which to extract the gameboard
+
+    Returns:
+        an ndarray which contains a warped image of the
+        gameboard, transformed to a square
+    """
+    corners = corner_detection(img)
+    bbox = np.array([[np.min(a), np.max(a)] for a in corners.T])
+    sidelen = np.min(np.abs(bbox[1] - bbox[0]))
+    square = np.array([[0, 0], [sidelen, 0], [0, sidelen], [sidelen, sidelen]])
+    hom = computeHomography(corners, square)
+    square_img = warp(img, ProjectiveTransform(matrix=np.linalg.inv(hom)))
+    return square_img[0:sidelen, 0:sidelen]
+
+def parse_into_game_board():
     """
     Turn images into the internal gameboard representation.
     """
     # segment
 
     # edge mask
+
+
+def computeHomography(src_pts_nx2: np.ndarray, dest_pts_nx2: np.ndarray) -> np.ndarray:
+    '''
+    Compute the homography matrix.
+    Arguments:
+        src_pts_nx2: the coordinates of the source points (nx2 numpy array).
+        dest_pts_nx2: the coordinates of the destination points (nx2 numpy array).
+    Returns:
+        H_3x3: the homography matrix (3x3 numpy array).
+    '''
+    A = np.zeros((src_pts_nx2.shape[0] * 2, 9))
+    for pt, ((x_s, y_s), (x_d, y_d)) in enumerate(zip(src_pts_nx2, dest_pts_nx2)):
+        for i in range(2):
+            r = pt * 2 + i
+            A[r, :6] = [
+                x_s * ((r + 1) % 2),
+                y_s * ((r + 1) % 2),
+                (r + 1) % 2,
+                x_s * (r % 2),
+                y_s * (r % 2),
+                r % 2
+            ]
+            if r % 2 == 0:
+                A[r, 6:] = [-x_d * x_s, -x_d * y_s, -x_d]
+            else:
+                A[r, 6:] = [-y_d * x_s, -y_d * y_s, -y_d]
+
+    # Get the homography matrix by decomposing to U * S * VT and getting the last row of VT
+    _, _, Vh = np.linalg.svd(-A)
+    h = Vh[-1, :]
+    H = h.reshape((3, 3))
+    H /= H[-1, -1]
+    return H
 
 
 def solve():
@@ -324,7 +348,6 @@ def simple_gameboard_image():
     """
     Generate overlay for image.
     """
-
 
 
 if __name__ == "__main__":
