@@ -6,7 +6,6 @@ import itertools
 from typing import Iterator, Optional
 
 from iqcar.car import Car
-from iqcar.gameboard import Gameboard
 
 
 bitboard = int
@@ -201,7 +200,7 @@ class BoardState:
         return isinstance(other, type(self)) and other.state == self.state
 
     @classmethod
-    def from_gameboard(cls, gb: Gameboard) -> 'BoardState':
+    def from_gameboard(cls, gb: 'Gameboard') -> 'BoardState':
         """Create a BoardState from a Gameboard
 
         Args:
@@ -224,8 +223,9 @@ class BoardState:
             bs.add_car((car.y, car.x), car.length, horiz=car.horizontal)
         return bs
 
-    def to_gameboard(self) -> Gameboard:
+    def to_gameboard(self) -> 'Gameboard':
         """Create a Gameboard from this Boardstate"""
+        from iqcar.gameboard import Gameboard
         def make_car(car):
             pos = first_set_bit(car)
             x, y = divmod(pos, self.board_size)

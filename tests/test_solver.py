@@ -5,7 +5,7 @@ import pytest
 
 from iqcar.car import Car
 from iqcar.gameboard import Gameboard
-from iqcar.solver import BoardState, solve
+from iqcar.solver import BoardState
 
 
 class TestBoardState:
@@ -119,7 +119,7 @@ class TestSolver:
         """Test solving the empty puzzle (only 1 car)"""
         s = BoardState()
         soln = [12288, 24576, 49152, 98304, 196608]
-        assert solve(s) == soln
+        assert s.solve() == soln
 
     def test_solve_complex_puzzle(self):
         """Test solving a nontrivial puzzle"""
@@ -127,7 +127,7 @@ class TestSolver:
         s.add_car((0, 3), 3, horiz=False)
         s.add_car((3, 0), 3, horiz=False)
         s.add_car((1, 3), 3, horiz=True)
-        soln = solve(s)
+        soln = s.solve()
         assert len(soln) == 12
 
     def test_unsolvable(self):
@@ -137,4 +137,4 @@ class TestSolver:
         s.add_car((5, 0), 3, horiz=False)
         s.add_car((5, 3), 3, horiz=False)
         with pytest.raises(ValueError):
-            solve(s)
+            s.solve()
