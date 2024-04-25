@@ -1,3 +1,5 @@
+import math
+from typing import Tuple
 from PIL import Image
 import numpy as np
 from skimage.segmentation import slic
@@ -113,6 +115,28 @@ def corner_detection(img : Image):
 
     coords = np.array([[tl_x, tl_y], [tr_x, tr_y], [bl_x, bl_y],[br_x, br_y]])
 
+    if DEBUG:
+        plt.imshow(img, cmap=plt.cm.gray)
+        plt.plot(
+            center_x, center_y, color='cyan', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[0][0],coords[0][1], color='red', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[1][0],coords[1][1], color='green', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[2][0],coords[2][1], color='yellow', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[3][0],coords[3][1], color='pink', marker='o', linestyle='None', markersize=6
+        )
+        plt.set_title("corner_detection_debug")
+        plt.show()
+        if SAVE_IMGS:
+            plt.savefig("outputs/corner_detection_debug.png")
+
     return coords
 
 
@@ -120,7 +144,7 @@ def corner_detection(img : Image):
 def segment_image(img : np.array):
     """
     params np.array image
-    returns labels, segmented img average color
+    returns labels, segmented img as ndarray
     """
     # Applying Simple Linear Iterative
     # Clustering on the image
