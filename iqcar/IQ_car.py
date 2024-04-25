@@ -38,7 +38,8 @@ def IQCar():
         'capture_image' : capture_image,
         'edge_detection' : edge_detection,
         'corner_detection' : corner_detection,
-        'segmentation' : segmentation
+        'segmentation' : segmentation,
+        'full_stack' : parse_into_game_board
     }
     run_tests(args.function_name, fun_handles)
 
@@ -217,7 +218,7 @@ def interpolate_points(point1, point2, n):
     dy = (y2 - y1) / (n - 1)
     
     # Generate interpolated points
-    interpolated_points = [(x1 + i * dx, y1 + i * dy) for i in range(n)]
+    interpolated_points = [(int(x1 + i * dx), int(y1 + i * dy)) for i in range(n)]
     
     return interpolated_points
 
@@ -229,19 +230,32 @@ def identify_colors_of_chunks(transformed_segmented_image : np.array):
     """
 
     shape = transformed_segmented_image.shape
-    top_points = interpolate_points(0, shape[1], 7) # x - col
-    bottom_points  = interpolate_points(0, shape[0], 7) # y - row
+    print(shape)
+    top_points = interpolate_points((0,0), (0, shape[1]-1), 7) # x - col
+    bottom_points  = interpolate_points((shape[0]-1,0), (shape[0]-1,shape[1]-1), 7) # y - row
+
+    # print(f"top points: {top_points}")
+    # print(f"bottom points: {bottom_points}")
 
     colors = np.zeros([6,6,3])
 
     for i in range(len(top_points) - 1):
-        tr_points = interpolate_points(top_points[i], bottom_points[i], 7)
+        tl_points = interpolate_points(top_points[i], bottom_points[i], 7)
         br_points = interpolate_points(top_points[i+1], bottom_points[i+1], 7)
 
-        for j in range(len(tr_points) - 1):
-            chunk = transformed_segmented_image[tr_points[j]:br_points[j+1]]
+        # print(f"top left points: {tl_points}")
+        # print(f"bottom right points: {br_points}")
+
+        for j in range(len(tl_points) - 1):
+            # print(f"range: {tl_points[j][0]}:{br_points[j+1][0]}, {tl_points[j][1]}:{br_points[j+1][1]}")
+            chunk = transformed_segmented_image[tl_points[j][0]:br_points[j+1][0], tl_points[j][1]:br_points[j+1][1]]
+
+            chunk_show = np.array(chunk*255, dtype=np.uint8)
+            plt.imshow(chunk_show)
+            plt.show()
+
             flat_chunk = chunk.reshape(-1, 3)
-            unique, counts = np.unique(flat_chunk, return_counts=True)
+            unique, counts = np.unique(flat_chunk, return_counts=True, axis=0)
             mode = unique[np.argmax(counts)]
             colors[j][i] = mode
 
@@ -307,7 +321,7 @@ def segment_image(img : np.array):
                         kind = 'avg')
     return segments_slic, img_2
 
-def normalize_board_square(img: np.ndarray) -> np.ndarray:
+def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray) -> np.ndarray:
     """Transform a game board image into a square.
 
     Args:
@@ -317,30 +331,46 @@ def normalize_board_square(img: np.ndarray) -> np.ndarray:
         an ndarray which contains a warped image of the
         gameboard, transformed to a square
     """
-    corners = corner_detection(img)
+    corners = corner_detection(gray_img)
     bbox = np.array([[np.min(a), np.max(a)] for a in corners.T])
     sidelen = np.min(np.abs(bbox[1] - bbox[0]))
     square = np.array([[0, 0], [sidelen, 0], [0, sidelen], [sidelen, sidelen]])
     hom = computeHomography(corners, square)
-    square_img = warp(img, ProjectiveTransform(matrix=np.linalg.inv(hom)))
-    return square_img[0:sidelen, 0:sidelen]
+    square_img = warp(segmented_img, ProjectiveTransform(matrix=np.linalg.inv(hom)))
+    return square_img[5:sidelen-5, 5:sidelen-5]
 
 def parse_into_game_board():
     """
     Turn images into the internal gameboard representation.
     """
     # segment
-    img = np.asarray(Image.open('data/IMG_14.png'))
+    img = Image.open('data/IMG_18.png')
+    gray_img = img.convert('L')
+    img = np.asarray(img)
     img = img_as_float(img[::2, ::2])
+    # segment
     labels, segmented_img = segment_image(img)
+    segmented_img = np.array(segmented_img*255, dtype=np.uint8)
+    # plt.imshow(segmented_img)
+    # plt.show()
     
-    gray_img = segmented_img.convert('L')
+    gray_img  = Image.fromarray(segmented_img).convert('L')
+    gray_img = np.array(gray_img, dtype=np.float32)
+    # print(np.unique(gray_img))
+    # plt.imshow(gray_img)
+    # plt.show()
+    
 
     # warp image
-    square_img = normalize_board_square(gray_img)
+    square_img = normalize_board_square(segmented_img, gray_img)
+    # plt.imshow(square_img)
+    # plt.show()
 
     # color chunks
     colors = identify_colors_of_chunks(square_img)
+    colors = np.array(colors*255, dtype=np.uint8)
+    plt.imshow(colors)
+    plt.show()
 
     # board
     board = board_from_colors(colors)
