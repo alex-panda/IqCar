@@ -251,8 +251,8 @@ def identify_colors_of_chunks(transformed_segmented_image : np.array):
             chunk = transformed_segmented_image[tl_points[j][0]:br_points[j+1][0], tl_points[j][1]:br_points[j+1][1]]
 
             chunk_show = np.array(chunk*255, dtype=np.uint8)
-            plt.imshow(chunk_show)
-            plt.show()
+            #plt.imshow(chunk_show)
+            #plt.show()
 
             flat_chunk = chunk.reshape(-1, 3)
             unique, counts = np.unique(flat_chunk, return_counts=True, axis=0)
@@ -375,6 +375,8 @@ def parse_into_game_board():
     # board
     board = board_from_colors(colors)
 
+    print(board.__repr__())
+
 def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
     """
     Creates a gameboard from the given colors.
@@ -397,8 +399,8 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
         return False
 
     def get(array: np.ndarray, y: int, x: int) -> np.ndarray | None:
-        if 0 <= y <= array.shape[0]:
-            if 0 <= x <= array.shape[1]:
+        if 0 <= y < array.shape[0]:
+            if 0 <= x < array.shape[1]:
                 return array[y, x, :]
         return None
 
@@ -412,7 +414,7 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
         r = c1r - c2r
         g = c1g - c2g
         b = c1b - c2b
-        return math.sqrt((((512+rmean)*r*r) >> 8) + (4*g*g) + (((767-rmean)*b*b) >> 8))
+        return math.sqrt((int((512+rmean)*r*r) >> 8) + int(4*g*g) + (int((767-rmean)*b*b) >> 8))
 
     background_squares: set[Tuple[int, int]] = set()
 
@@ -420,18 +422,19 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
 
     # first, weed out the background squares
     # All background squares are assumed to be a shade of white
-    for y in colors.shape[0]:
-        for x in colors.shape[1]:
-            color = colors[y, x, :]
-            if (np.abs(color[0] - color[1]) <= e) and (np.abs(color[1] - color[2]) <= e) and (np.abs(color[2] - color[0]) <= e):
+    for y in range(colors.shape[0]):
+        for x in range(colors.shape[1]):
+            r,g,b = colors[y, x, :]
+            r,g,b = int(r), int(g), int(b)
+            if (np.abs(r - g) <= e) and (np.abs(g - b) <= e) and (np.abs(b - r) <= e):
                 background_squares.add((y, x))
 
     closest_red = np.inf
     goal_car = Car(0, 0, False, 2)
     cars: list[Car] = []
 
-    for y in colors.shape[0]:
-        for x in colors.shape[1]:
+    for y in range(colors.shape[0]):
+        for x in range(colors.shape[1]):
 
             if (y, x) in background_squares:
                 continue
@@ -464,7 +467,8 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
             nny, nnx = ny+closest_offset[0], nx+closest_offset[1]
             color3 = get(colors, nny, nnx)
 
-            if color_dist(color2, color3) <= 10:
+            print(color_dist(color2, color3))
+            if color_dist(color2, color3) <= 500:
                 # include the third color
                 background_squares.add((y, x))
                 background_squares.add((ny, nx))
