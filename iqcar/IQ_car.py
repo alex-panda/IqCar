@@ -13,7 +13,7 @@ from skimage.draw import line as draw_line
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.filters import gaussian, threshold_otsu, threshold_minimum
 from skimage.morphology import dilation, erosion
-from skimage.segmentation import mark_boundaries, slic, quickshift
+from skimage.segmentation import mark_boundaries, slic, quickshift, flood_fill
 from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line, ProjectiveTransform, warp
 from skimage.util import img_as_float
 from sklearn.cluster import MeanShift, estimate_bandwidth
@@ -183,7 +183,6 @@ def corner_detection(gray_img: np.ndarray):
 def clean_binary_image(binary_image, k=25):
     footprint = np.ones((k, k))
 
-    print("cleaning binary_image")
     fig, ax = plt.subplots(1, 2)
     processed_img = erosion(binary_image, footprint=footprint)
     # ax[0].imshow(processed_img, cmap=cm.gray)
@@ -300,18 +299,14 @@ def segmentation():
     plt.savefig(f'outputs/segmentation_14.png')
     plt.show()
 
-def segment_image(img : np.array):
+def segment_image(img : np.array, num_seg = 250, compact = 10):
     """
     params np.array image
     returns labels, segmented img average color
     """
     # Applying Simple Linear Iterative
     # Clustering on the image
-    num_seg = 250
-    compact = 10
-    print("starting slic")
     segments_slic = slic(img, n_segments=num_seg, compactness=compact)
-    print("end slic")
     
     # Converts a label image into
     # an RGB color image for visualizing
@@ -321,7 +316,7 @@ def segment_image(img : np.array):
                         kind = 'avg')
     return segments_slic, img_2
 
-def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray) -> np.ndarray:
+def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray, buffer=3) -> np.ndarray:
     """Transform a game board image into a square.
 
     Args:
@@ -337,14 +332,14 @@ def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray) -> n
     square = np.array([[0, 0], [sidelen, 0], [0, sidelen], [sidelen, sidelen]])
     hom = computeHomography(corners, square)
     square_img = warp(segmented_img, ProjectiveTransform(matrix=np.linalg.inv(hom)))
-    return square_img[5:sidelen-5, 5:sidelen-5]
+    return square_img[buffer:sidelen-buffer, buffer:sidelen-buffer]
 
 def parse_into_game_board():
     """
     Turn images into the internal gameboard representation.
     """
     # segment
-    img = Image.open('data/IMG_18.png')
+    img = Image.open('data/IMG_17.png')
     gray_img = img.convert('L')
     img = np.asarray(img)
     img = img_as_float(img[::2, ::2])
@@ -373,7 +368,7 @@ def parse_into_game_board():
     plt.show()
 
     # board
-    board = board_from_colors(colors)
+    # board = board_from_colors(colors)
 
     print(board.__repr__())
 
