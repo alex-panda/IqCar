@@ -339,7 +339,7 @@ def parse_into_game_board():
     Turn images into the internal gameboard representation.
     """
     # segment
-    img = Image.open('data/IMG_17.png')
+    img = Image.open('data/IMG_18.png')
     gray_img = img.convert('L')
     img = np.asarray(img)
     img = img_as_float(img[::2, ::2])
