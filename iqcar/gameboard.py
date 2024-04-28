@@ -30,3 +30,32 @@ class Gameboard:
 
     def into_state(self) -> BoardState:
         return BoardState.from_gameboard(self) 
+
+    def __str__(self) -> str:
+        car_map = {}
+        for i, car in enumerate(self.cars):
+            for point in car.points():
+                car_map[point] = i
+
+        l = len(str(max(len(self.cars) - 1, 0)))
+
+        formatting = '{' + f':>{l}' '}|'
+
+        full = "+" + "-"*(l*self.width*2 - 1) + "+\n"
+        for r in range(self.height):
+            row = "|"
+
+            for c in range(self.width):
+
+                if (c, r) in car_map:
+                    row += formatting.format(car_map[(c, r)])
+                else:
+                    row += ' '*l + '|'
+
+            full += row + "\n"
+            full += "+" + "-"*(l*self.width*2 - 1) + "+\n"
+        return full
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
