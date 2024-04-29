@@ -34,11 +34,18 @@ class Car:
         """
         Returns all points that this `Car` occupies.
         """
-        for i in range(self.length):
-            if self.horizontal:
-                yield (self.x, self.y + i)
-            else:
+        if self.horizontal:
+            for i in range(self.length):
                 yield (self.x + i, self.y)
+        else:
+            for i in range(self.length):
+                yield (self.x, self.y + i)
+
+    def __str__(self) -> str:
+        return f"<Car(x={self.x},y={self.y},horizontal={self.horizontal},length={self.length},id={self.id})>"
+
+    def __repr__(self) -> str:
+        return str(self)
 
     def __eq__(self, other):
         return hash(self) == hash(other)
