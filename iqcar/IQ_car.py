@@ -261,6 +261,48 @@ def identify_colors_of_chunks(transformed_segmented_image : np.array):
     return colors
 
 
+def draw_chunk_lines(transformed_segmented_image : np.array):
+    """
+    Expecting a transformed_segmented_image and transformed_corners (4x2 array)
+
+    Returns modal color of each chunk between the corners as a 6x6 array
+    """
+    plt.imshow(transformed_segmented_image)
+    shape = transformed_segmented_image.shape
+    print(shape)
+    top_points = interpolate_points((0,0), (0, shape[1]-1), 7) # x - col
+    bottom_points  = interpolate_points((shape[0]-1,0), (shape[0]-1,shape[1]-1), 7) # y - row
+
+    left_points = interpolate_points((0,0), (shape[0]-1, 0), 7) # x - col
+    right_points  = interpolate_points((0, shape[1]-1), (shape[0]-1,shape[1]-1), 7) # y - row
+
+    # print(f"top points: {top_points}")
+    # print(f"bottom points: {bottom_points}")
+
+    colors = np.zeros([6,6,3])
+
+    for i in range(len(top_points) - 1):
+        tl_points = interpolate_points(top_points[i], bottom_points[i], 7)
+        br_points = interpolate_points(top_points[i+1], bottom_points[i+1], 7)
+
+        foo_points = interpolate_points(left_points[i], right_points[i], 7)
+        bar_points = interpolate_points(left_points[i+1], right_points[i+1], 7)
+
+        for j in range(len(tl_points)):
+            x = [tl_points[j][1], br_points[j][1]]
+            y = [tl_points[j][0], br_points[j][0]]
+            plt.plot(x, y, color="red", linewidth=3) 
+
+            x = [foo_points[j][1], bar_points[j][1]]
+            y = [foo_points[j][0], bar_points[j][0]]
+            plt.plot(x, y, color="red", linewidth=3) 
+
+            
+            
+
+    plt.savefig("square_with_lines.png")
+    plt.show()
+
 
 def bounding_box_mask(x1, y1, x2, y2, img):
     # Create an empty binary mask
@@ -339,7 +381,7 @@ def parse_into_game_board():
     Turn images into the internal gameboard representation.
     """
     # segment
-    img = Image.open('data/IMG_18.png')
+    img = Image.open('data/IMG_17.png')
     gray_img = img.convert('L')
     img = np.asarray(img)
     img = img_as_float(img[::2, ::2])
@@ -358,13 +400,17 @@ def parse_into_game_board():
 
     # warp image
     square_img = normalize_board_square(segmented_img, gray_img)
-    # plt.imshow(square_img)
-    # plt.show()
+    plt.imshow(square_img)
+    plt.savefig("square_img.png")
+    plt.show()
+
+    draw_chunk_lines(square_img)
 
     # color chunks
     colors = identify_colors_of_chunks(square_img)
     colors = np.array(colors*255, dtype=np.uint8)
     plt.imshow(colors)
+    plt.savefig("pixels_that_suck.png")
     plt.show()
 
     # board
