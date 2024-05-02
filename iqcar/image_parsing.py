@@ -259,9 +259,11 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
         if np.abs(two - one) > e: return True
         return False
 
+    def in_bounds(array: np.ndarray, y: int, x: int) -> bool:
+        return 0 <= y < array.shape[0] and 0 <= x < array.shape[1]
+
     def get(array: np.ndarray, y: int, x: int) -> np.ndarray | None:
-        if 0 <= y <= array.shape[0]:
-            if 0 <= x <= array.shape[1]:
+        if in_bounds(array, y, x):
                 return array[y, x, :]
         return None
 
@@ -275,78 +277,85 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
         r = c1r - c2r
         g = c1g - c2g
         b = c1b - c2b
-        return math.sqrt((((512+rmean)*r*r) >> 8) + (4*g*g) + (((767-rmean)*b*b) >> 8))
+        return math.sqrt((int((512+rmean)*r*r) >> 8) + int(4*g*g) + (int((767-rmean)*b*b) >> 8))
+
+    e = 30
 
     background_squares: set[Tuple[int, int]] = set()
 
-    e = 20
-
-    # first, weed out the background squares
-    # All background squares are assumed to be a shade of white
-    for y in colors.shape[0]:
-        for x in colors.shape[1]:
-            color = colors[y, x, :]
-            if (np.abs(color[0] - color[1]) <= e) and (np.abs(color[1] - color[2]) <= e) and (np.abs(color[2] - color[0]) <= e):
+    # first, figure out what are the background squares
+    # All background squares are assumed to be a shade of white/gray/black
+    for y in range(colors.shape[0]):
+        for x in range(colors.shape[1]):
+            r,g,b = colors[y, x, :]
+            r,g,b = int(r), int(g), int(b)
+            if (np.abs(r - g) <= e) and (np.abs(g - b) <= e) and (np.abs(b - r) <= e):
                 background_squares.add((y, x))
-
-    closest_red = np.inf
-    goal_car = Car(0, 0, False, 2)
+                colors[y, x, :] = 0
+    
     cars: list[Car] = []
+    taken_squares: set[Tuple[int, int]] = set(background_squares)
 
-    for y in colors.shape[0]:
-        for x in colors.shape[1]:
+    # go through every point of the board
+    for y in range(colors.shape[0]):
+        for x in range(colors.shape[1]):
 
-            if (y, x) in background_squares:
+            # if the square is already taken, then ignore it
+            p   = (y, x)
+            if p in taken_squares:
                 continue
 
-            color = colors[y, x, :]
+            possible_cars = []
 
-            closest_dist = np.inf
-            closest_offset = (0, 0)
-            closest_color = np.array([0, 0, 0], dtype=np.float64)
-            for offset in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                ny, nx = (y+offset[0], x+offset[1])
+            # Get possible cars for square (y, x)
+            for h, oy, ox in [(False, 1, 0), (True, 0, 1)]:
 
-                if (ny, nx) in background_squares:
-                    continue
+                pn  = (y+oy, x+ox)
+                pnn = (y+oy+oy, x+ox+ox)
 
-                color2 = get(colors, ny, nx)
-                dist = color_dist(color, color2)
+                if pn not in taken_squares and in_bounds(colors, *pn):
 
-                if dist < closest_dist:
-                    closest_offset = offset
-                    closest_dist = dist
-                    closest_color = color2
+                    if pnn not in taken_squares and in_bounds(colors, *pnn):
+                        possible_cars.append((h, (p, pn), (p, pn, pnn)))
+                    else:
+                        possible_cars.append((h, (p, pn), None))
 
-            if np.inf <= closest_dist:
-                # no second square found
+            if len(possible_cars) == 0:
+                # all cars out of bounds
                 continue
 
-            # second square found so check for third
+            def car_key(c):
+                (y , x ) = c[1][0]
+                (yn, xn) = c[1][1]
+                return color_dist(colors[y, x], colors[yn, xn])
 
-            nny, nnx = ny+closest_offset[0], nx+closest_offset[1]
-            color3 = get(colors, nny, nnx)
+            # sort cars by how far the first color is from the next color in the car
+            sorted_cars = sorted(possible_cars, key=car_key)
 
-            if color_dist(color2, color3) <= 10:
-                # include the third color
-                background_squares.add((y, x))
-                background_squares.add((ny, nx))
-                background_squares.add((nny, nnx))
-                car = Car(min(x, nx, nnx), min(y, ny, nny), closest_offset[0] != 0, 3)
-                if color_dist(closest_color, red) < closest_red:
-                    goal_car = car
-                cars.append(car)
+            (h, car2, car3) = sorted_cars[0]
 
-            else:
-                # car is only 2 squares long
-                background_squares.add((y, x))
-                background_squares.add((ny, nx))
-                car = Car(min(x, nx), min(y, ny), closest_offset[0] != 0, 2)
-                if color_dist(closest_color, red) < closest_red:
-                    goal_car = car
-                cars.append(car)
+            # check if car should be 3-long
+            car = car2
+            if car3 is not None:
+                (yn , xn ) = car3[1]
+                (ynn, xnn) = car3[2]
+                if color_dist(colors[yn, xn], colors[ynn, xnn]) <= 100:
+                    car = car3
+                
+            # update background squares so that later iterations do not use the values already in use
+            taken_squares = taken_squares.union(set(car))
 
-    return Gameboard(goal_car, cars)
+            # append the new car
+            cars.append(Car(car[0][1], car[0][0], h, len(car)))
+
+    #print("Background:")
+    #print(Gameboard.board_str([Car(x, y, True, 1) for (y, x) in background_squares]))
+
+    #print("Result:")
+    #print(Gameboard.board_str(cars))
+
+    s = sorted(cars, key=lambda c: color_dist(colors[c.y, c.x], red))
+    return Gameboard(None if len(s) == 0 else s[0], cars)
 
 def parse_into_game_board(img : Image):
     """
