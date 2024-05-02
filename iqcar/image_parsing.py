@@ -380,6 +380,42 @@ def parse_into_game_board(img : Image):
     board = board_from_colors(colors)
     return board
 
+def generate_img_statistic(img : Image, expected_board : Gameboard):
+
+    start = time.time()
+    # segment
+    gray_img = img.convert('L')
+    img = np.asarray(img)
+    handle_image(img, "input_image")
+    img = img_as_float(img[::2, ::2])
+
+    # segment
+    labels, segmented_img = segment_image(img)
+    segmented_img = np.array(segmented_img*255, dtype=np.uint8)
+    handle_image(segmented_img, "segmented_image")
+    
+    gray_img  = Image.fromarray(segmented_img).convert('L')
+    gray_img = np.array(gray_img, dtype=np.float32)
+    handle_image(gray_img, "gray_segmented_image")
+
+
+    # warp image
+    square_img = normalize_board_square(segmented_img, gray_img)
+    handle_image(square_img, "warped_image")
+
+    # color chunks
+    colors = identify_colors_of_chunks(square_img)
+    colors = np.array(colors*255, dtype=np.uint8)
+    handle_image(colors, "6x6_pixel_image")
+
+    # board
+    board = board_from_colors(colors)
+
+    end = time.time()
+    time = end - start
+    eq = board == expected_board
+
+
 def handle_image(img, title):
     plt.imshow(img)
     plt.set_title(title)

@@ -26,7 +26,7 @@ class Gameboard:
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.goal_car == other.goal_car and self.cars == other.cars
+        return self.goal_car == other.goal_car and all(x == y for x, y in zip(self.cars, other.cars))
 
     def into_state(self) -> BoardState:
         return BoardState.from_gameboard(self) 
