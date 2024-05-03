@@ -381,6 +381,12 @@ def parse_into_game_board(img : Image):
     return board
 
 def generate_img_statistic(img : Image, expected_board : Gameboard):
+    """
+    given an image, and expected gameboard, parse the image. check if the gameboard matches the expected. 
+    return time to complete and equality
+
+    returns eq, time
+    """
 
     start = time.time()
     # segment
@@ -414,6 +420,8 @@ def generate_img_statistic(img : Image, expected_board : Gameboard):
     end = time.time()
     time = end - start
     eq = board == expected_board
+
+    return eq, time
 
 
 def handle_image(img, title):
