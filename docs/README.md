@@ -86,6 +86,31 @@ The fourth set:
 
 You can see that there is a huge amount of deviation in the final pixel arrangement, yet the original images are fairly close, to one another. But these small deviations from what is “expected” cause a range of cascading problems that lead to this huge variation throughout processing. 
 
+For images which the board state detection works well for, we can parse the image and build a solution. For instance, on
+one image of a game board, we were able to compute the following solution, where "00" represents the goal car, trying to
+exit the board on the right side:
+
+```text
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | | |1| | | | | | |1| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| |0|0|2|1|3| | |0|0|2|1|3| | |0|0|2|1|3| | |0|0|2| |3| | |0|0| | |3| | | |0|0| |3| | | | |0|0|3| | | | |0|0| | | | | | |0|0|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | |2| |3| | | | |2| |3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | | | | | | | | | | | | | | | | | | | | | | | |1| | | | | |2|1| | | | | |2|1| | | | | |2|1| | | | | |2|1|3| | | | |2|1|3|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+```
+
+Each ASCII-art diagram shows an internal representation of the board state. Our solver produces the sequence of moves
+shown above, where each move is represented by its own board, different from the previous by a single move. In this
+situation, the solver begins by moving some of the vertical cars out of the way, and then incrementally moves the goal
+car to the right, moving other cars out of the way as needed.
+
 ## Demos
 
 
