@@ -119,7 +119,7 @@ class TestSolver:
         """Test solving the empty puzzle (only 1 car)"""
         s = BoardState()
         soln = [12288, 24576, 49152, 98304, 196608]
-        assert s.solve() == soln
+        assert [b.state for b in s.solve()] == soln
 
     def test_solve_complex_puzzle(self):
         """Test solving a nontrivial puzzle"""

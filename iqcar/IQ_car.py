@@ -540,6 +540,7 @@ def test_main() -> float:
         Image.open(os.path.join('.', 'data', file))
         for file in sorted(os.listdir(os.path.join('.', 'data')), key=key)
     ])
+    return 0.0
 
 def main(images: None | list[Image.Image] = None):
 
@@ -549,7 +550,7 @@ def main(images: None | list[Image.Image] = None):
     images: list[np.ndarray] = [img_as_float(img) for img in images]
 
     for (i, img) in enumerate(images):
-        if i < 17:
+        if i != 15:
             continue
 
         #Image.fromarray(img).show()
@@ -582,7 +583,9 @@ def main(images: None | list[Image.Image] = None):
 
         board = board_from_colors(colors)
         print(board)
-        print([b.to_string() for b in board.into_state().solve()])
+        for b in board.into_state().solve():
+            new_gb = b.to_gameboard()
+            print(new_gb)
 
 def computeHomography(src_pts_nx2: np.ndarray, dest_pts_nx2: np.ndarray) -> np.ndarray:
     '''

@@ -143,15 +143,15 @@ class BoardState:
         start_idx = y * self.board_size + x
         if horiz:
             if x + length > self.board_size:
-                raise ValueError(f"Car is too long for horizontal position "
+                raise ValueError("Car is too long for horizontal position "
                                  f"(position: {pos}, length: {length}, "
-                                 "board size: {self.board_size}")
+                                 f"board size: {self.board_size}")
             self.h_obstacles.append((1 << start_idx + length) - (1 << start_idx))
         else:
             if y + length > self.board_size:
-                raise ValueError(f"Car is too long for vertical position "
+                raise ValueError("Car is too long for vertical position "
                                  f"(position: {pos}, length: {length}, "
-                                 "board size: {cls.BOARD_SIZE}")
+                                 f"board size: {self.board_size}")
             self.v_obstacles.append(sum(1 << start_idx + i * self.board_size
                                         for i in range(length)))
         return self
@@ -210,17 +210,19 @@ class BoardState:
             a BoardState representing the given Gameboard
         """
         gc = gb.goal_car
-        goal_car_xy = gc.y, gc.x
+        goal_car_xy = gc.x, gc.y
         if gb.width != gb.height:
             raise ValueError("BoardState assumes width and height are equal"
                              f"(Gameboard width: {gb.width}, height: {gb.height})")
         bs = cls(
             goal_car=goal_car_xy,
-            exit_row=gb.exit_x,  # Gameboard uses "x" to refer to rows
+            exit_row=gb.exit_x,
             goal_car_length=gc.length,
         )
         for car in gb.cars:
-            bs.add_car((car.y, car.x), car.length, horiz=car.horizontal)
+            if car.id == -1:
+                continue
+            bs.add_car((car.x, car.y), car.length, horiz=car.horizontal)
         return bs
 
     def to_gameboard(self) -> 'Gameboard':
@@ -228,14 +230,14 @@ class BoardState:
         from iqcar.gameboard import Gameboard
         def make_car(car):
             pos = first_set_bit(car)
-            x, y = divmod(pos, self.board_size)
+            y, x = divmod(pos, self.board_size)
             length = car.bit_count()
             horiz_mask = 2 * length - 1 << pos
             horiz = horiz_mask & car == horiz_mask
             return Car(x, y, horiz, length)
 
         goal_car = make_car(self.goal_car)
-        cars = [make_car(car) for car in self.all_cars(with_goal=False)]
+        cars = [make_car(car) for car in self.all_cars()]
         return Gameboard(goal_car, cars)
 
     def to_string(self, state: Optional[bitboard] = None) -> str:
