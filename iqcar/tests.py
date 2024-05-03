@@ -83,7 +83,6 @@ def run_test_gameboard_2():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
@@ -124,8 +123,8 @@ def run_test_gameboard_3():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
@@ -166,8 +165,8 @@ def run_test_gameboard_4():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
@@ -209,8 +208,8 @@ def run_test_gameboard_5():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
@@ -252,7 +251,6 @@ def run_test_gameboard_6():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
@@ -297,8 +295,8 @@ def run_test_gameboard_7():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
@@ -342,8 +340,8 @@ def run_test_gameboard_8():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
@@ -385,8 +383,8 @@ def run_test_gameboard_9():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
@@ -428,8 +426,8 @@ def run_test_gameboard_10():
         fn = f"IMG_{i}.jpg"
         img_nums.append(i)
         img = Image.open(f"data/{fn}")
-        img = img.rotate(90) # counter clockwise
         imgs.append(img)
+
 
     data = []
     for img_num, img in zip(img_nums, imgs):
