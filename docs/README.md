@@ -92,29 +92,52 @@ You can see that there is a huge amount of deviation in the final pixel arrangem
 
 ## Demos
 
-For images which the board state detection works well for, we can parse the image and build a solution. For instance, on
-one image of a game board, we were able to compute the following solution, where "00" represents the goal car, trying to
-exit the board on the right side:
+We start by taking a picture of the board we want to solve.
+
+![Original Picture](./imgs/IMG_18.png)
+
+Then we segment the image,
+
+![Segmented Image](./imgs/SegmentedImage_18.png)
+
+perform corner detection on it,
+
+![Corner Detected Image](./imgs/CornerDetection_18.png)
+
+warp the image to make the board square,
+
+![Square Image](./imgs/WarpedSegmentedImage_18.png)
+
+devide the image into a 6 by 6 grid of chunks (because IQ Car uses a 6 by 6 board),
+
+![Square Image](./imgs/GridOverlay.png)
+
+and represent each chunk by its modal color.
+
+![Square Image](./imgs/6x6_pixel_image_18.png)
+
+From there, we infer different cars and their placement on the board and then
+solve the resulting board. The solution looks like the following:
 
 ```text
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
-| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
-| | | | | | | | | | | |1| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
-| |0|0|2|1|3| | |0|0|2|1|3| | |0|0|2|1|3| | |0|0|2| |3| | |0|0| | |3| | | |0|0| |3| | | | |0|0|3| | | | |0|0| | | | | | |0|0|
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
-| | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3|
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
-| | | |2|1|3| | | | |2| |3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3| | | | |2|1|3|
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
-| | | | | | | | | | | | | | | | | | | | | | | | | |1| | | | | |2|1| | | | | |2|1| | | | | |2|1| | | | | |2|1|3| | | | |2|1|3|
-+-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | | |1|1| | | | | |1|1| | | | | |1|1| | | | | |1|1| | | | | |1|1| | | | | |1|1| | | | | |1|1|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | | |2|2| | | | | |2|2| | | | | |2|2| | | | | |2|2| | | | | |2|2| | | | | |2|2| | | | | |2|2|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| |0|0|3|4|5| | |0|0| |4|5| | | |0|0|4|5| | | |0|0| |5| | | | |0|0|5| | | | |0|0| | | | | | |0|0|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5| | | | |3|4|5|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+| | | | | | | | | | |3| | | | | | |3| | | | | | |3|4| | | | | |3|4| | | | | |3|4|5| | | | |3|4|5|
++-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
 ```
 
-Each ASCII-art diagram shows an internal representation of the board state. Our solver produces the sequence of moves
-shown above, where each move is represented by its own board, different from the previous by a single move. In this
+Each ASCII-art diagram above shows an internal representation of the board state. Our solver produces the sequence of moves
+shown above, where each move is represented by its a board that is different from the previous board by a single move. In this
 situation, the solver begins by moving some of the vertical cars out of the way, and then incrementally moves the goal
-car to the right, moving other cars out of the way as needed.
+car to the right, moving other cars out of the way as necessary.
 
 

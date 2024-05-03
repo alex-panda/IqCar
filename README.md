@@ -2,7 +2,7 @@
 
 From top directory run:
 
-python iqcar/IQ_car.py main
+python ./iqcar/IQ_car.py main
 
 and you should see a sequence of images as well as the board being solved from the terminal output!
 

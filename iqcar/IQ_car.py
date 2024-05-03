@@ -30,7 +30,7 @@ GOAL_CAR_HEX = "FF0000"
 DEMO = True
 
 # CHANGE THIS IF YOU WANT TO RUN ON ALL IMAGES
-IMG_18 = True
+ONLY_IMG_18 = True
 
 def IQCar():
     parser = argparse.ArgumentParser(
@@ -549,104 +549,82 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
     #    print(s[0] is cars[2])
     return Gameboard(None if len(s) == 0 else s[0], cars)
 
-def test_main() -> float:
-    import re
-    f = re.compile('[0123456789]+')
-    def key(file):
-        ints = f.findall(file)
-        if len(ints) == 0:
-            return np.inf
-        return float(ints[0])
+def test_main():
 
-    main([
-        Image.open(os.path.join('.', 'demo_data', file))
-        for file in sorted(os.listdir(os.path.join('.', 'demo_data')), key=key)
-    ])
-    return 0.0
+    if ONLY_IMG_18:
+        return main(
+            [Image.open(os.path.join('.', 'data', 'IMG_18.png'))],
+            debug=True
+        )
 
-def main(images: None | list[Image.Image] = None):
-
-    if IMG_18:
-        img = Image.open("data/IMG_18.png")
-        img.show()
-        img  = np.asarray(img)
-        img = img_as_float(img[::2, ::2])
-        # segment
-        print("Segmenting image...")
-        _labels, segmented_img = segment_image(img)
-        segmented_img = np.array(segmented_img*255, dtype=np.uint8)
-        plt.imshow(segmented_img)
-        plt.show()
-
-        gray_img  = Image.fromarray(segmented_img).convert('L')
-        gray_img = np.array(gray_img, dtype=np.float64)
-
-        # warp image
-        print("Warping image...")
-        square_img = normalize_board_square(segmented_img, gray_img)
-        draw_chunk_lines(square_img)
-
-        # color chunks
-        print("Identifying modal colors...")
-        colors = identify_colors_of_chunks(square_img)
-        colors = np.array(colors*255, dtype=np.uint8)
-
-        plt.imshow(colors)
-        plt.show()
-
-        # extract board
-        print("Extracting board...")
-        board = board_from_colors(colors)
-        print(board)
-        for b in board.into_state().solve():
-            new_gb = b.to_gameboard()
-            print(new_gb)
     else:
-        if images is None:
-            return test_main()
+        import re
+        f = re.compile('[0123456789]+')
+        def key(file):
+            ints = f.findall(file)
+            if len(ints) == 0:
+                return np.inf
+            return float(ints[0])
 
+        return main(
+            [Image.open(os.path.join('.', 'demo_data', file))
+             for file in sorted(os.listdir(os.path.join('.', 'demo_data')), key=key)
+            ],
+            debug=False
+        )
 
-        for (i, img) in enumerate(images):
+def main(images: None | list[Image.Image] = None, debug: bool = False):
 
-            img.show()
+    if images is None:
+        return test_main()
 
-            try: 
-                print(f"Image {i}")
-                img  = np.asarray(img)
-                img = img_as_float(img[::2, ::2])
-                # segment
-                print("Segmenting image...")
-                _labels, segmented_img = segment_image(img)
-                segmented_img = np.array(segmented_img*255, dtype=np.uint8)
+    for (i, img) in enumerate(images):
+
+        img.show()
+
+        try: 
+            print(f"Image {i}")
+            img  = np.asarray(img)
+            img = img_as_float(img[::2, ::2])
+            # segment
+            print("Segmenting image...")
+            _labels, segmented_img = segment_image(img)
+            segmented_img = np.array(segmented_img*255, dtype=np.uint8)
+            if debug:
                 plt.imshow(segmented_img)
                 plt.show()
 
-                gray_img  = Image.fromarray(segmented_img).convert('L')
-                gray_img = np.array(gray_img, dtype=np.float64)
+            gray_img  = Image.fromarray(segmented_img).convert('L')
+            gray_img = np.array(gray_img, dtype=np.float64)
 
-                # warp image
-                print("Warping image...")
-                square_img = normalize_board_square(segmented_img, gray_img)
+            # warp image
+            print("Warping image...")
+            square_img = normalize_board_square(segmented_img, gray_img)
+            if debug:
+                plt.imshow(square_img)
+                plt.show()
+
+            if debug:
+                # shows chunk lines
                 draw_chunk_lines(square_img)
 
-                # color chunks
-                print("Identifying modal colors...")
-                colors = identify_colors_of_chunks(square_img)
-                colors = np.array(colors*255, dtype=np.uint8)
-
+            # color chunks
+            print("Identifying modal colors...")
+            colors = identify_colors_of_chunks(square_img)
+            colors = np.array(colors*255, dtype=np.uint8)
+            if debug:
                 plt.imshow(colors)
                 plt.show()
 
-                # extract board
-                print("Extracting board...")
-                board = board_from_colors(colors)
-                print(board)
-                for b in board.into_state().solve():
-                    new_gb = b.to_gameboard()
-                    print(new_gb)
-                print("============= IMAGE DIDN'T CRASH! =============\nmoving on the the next image...")
-            except:
-                print("=============    IMAGE FAILED!    =============\nmoving on to the next image...")
+            # extract board
+            print("Extracting board...")
+            board = board_from_colors(colors)
+            for b in board.into_state().solve():
+                new_gb = b.to_gameboard()
+                print(new_gb)
+            #print("============= IMAGE DIDN'T CRASH! =============\nmoving on the the next image...")
+        except Exception:
+            print("=============    IMAGE FAILED!    =============\nmoving on to the next image...")
 
 def computeHomography(src_pts_nx2: np.ndarray, dest_pts_nx2: np.ndarray) -> np.ndarray:
     '''
