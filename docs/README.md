@@ -49,7 +49,7 @@ returns an error if the board is unsolvable.
 
 As it turns out, our system is very overfit for a handful of images. It does not generalize well at all. We took a testbed of about 50 images and 10 board arrangements and ran it through our system, checking if the goal board state was met by the system and how long it took. Virtually none of the images passed, aside from some from the set we tuned to as we worked through this project. In those board arrangements are included boards with a gray car which should be very difficult for our system to deal with, an entirely full board, along with some more “friendly” boards that should be easier for our system to effectively identify. 
 
-As an example, here is a set of images where our system worked out well NOTE: FIX IMAGES ONCE MERGE OF BRANCH HAPPENS:
+As an example, here is a set of images where our system worked out well:
 
 ![Image 18 input](../outputs/input_image_18.png) 
 ![Segmentation](../outputs/segmented_image_18.png)
