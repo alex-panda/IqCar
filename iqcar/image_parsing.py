@@ -12,9 +12,10 @@ from skimage.util import img_as_float
 import matplotlib.pyplot as plt
 from iqcar.car import Car
 from iqcar.gameboard import Gameboard
+import time
 
 DEBUG = False
-SAVE_IMGS = False
+SAVE_IMGS = True
 SHOW_IMGS = False
 
 
@@ -71,23 +72,13 @@ def interpolate_points(point1, point2, n):
     dy = (y2 - y1) / (n - 1)
     
     # Generate interpolated points
-    interpolated_points = [(x1 + i * dx, y1 + i * dy) for i in range(n)]
+    interpolated_points = [(int(x1 + i * dx), int(y1 + i * dy)) for i in range(n)]
     
     return interpolated_points
-
 # ============== DOERS ==============
 
-def corner_detection(img : Image):
-    """
-    finds the corners of the gameboard assuming the gameboard is oriented roughly straight on and not rotated.
-    
-    parameter img
-    return corners as top left, top right, bottom left, bottom right
-    """
-    gray_img = img.convert('L')
-    img = np.array(img)
-    gray_img = np.array(gray_img)
-
+def corner_detection(gray_img: np.ndarray):
+    """Find corners of the game board"""
     thresh_min = threshold_otsu(gray_img)
     binary_img = gray_img > thresh_min
     binary_img = clean_binary_image(binary_img)
@@ -116,7 +107,7 @@ def corner_detection(img : Image):
     coords = np.array([[tl_x, tl_y], [tr_x, tr_y], [bl_x, bl_y],[br_x, br_y]])
 
     if DEBUG:
-        plt.imshow(img, cmap=plt.cm.gray)
+        plt.imshow(gray_img)
         plt.plot(
             center_x, center_y, color='cyan', marker='o', linestyle='None', markersize=6
         )
@@ -212,6 +203,7 @@ def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray, buff
     return square_img[buffer:sidelen-buffer, buffer:sidelen-buffer]
 
 
+
 def identify_colors_of_chunks(transformed_segmented_image : np.array):
     """
     Expecting a transformed_segmented_image and transformed_corners (4x2 array)
@@ -220,19 +212,32 @@ def identify_colors_of_chunks(transformed_segmented_image : np.array):
     """
 
     shape = transformed_segmented_image.shape
-    top_points = interpolate_points(0, shape[1], 7) # x - col
-    bottom_points  = interpolate_points(0, shape[0], 7) # y - row
+    # print(shape)
+    top_points = interpolate_points((0,0), (0, shape[1]-1), 7) # x - col
+    bottom_points  = interpolate_points((shape[0]-1,0), (shape[0]-1,shape[1]-1), 7) # y - row
+
+    # print(f"top points: {top_points}")
+    # print(f"bottom points: {bottom_points}")
 
     colors = np.zeros([6,6,3])
 
     for i in range(len(top_points) - 1):
-        tr_points = interpolate_points(top_points[i], bottom_points[i], 7)
+        tl_points = interpolate_points(top_points[i], bottom_points[i], 7)
         br_points = interpolate_points(top_points[i+1], bottom_points[i+1], 7)
 
-        for j in range(len(tr_points) - 1):
-            chunk = transformed_segmented_image[tr_points[j]:br_points[j+1]]
+        # print(f"top left points: {tl_points}")
+        # print(f"bottom right points: {br_points}")
+
+        for j in range(len(tl_points) - 1):
+            # print(f"range: {tl_points[j][0]}:{br_points[j+1][0]}, {tl_points[j][1]}:{br_points[j+1][1]}")
+            chunk = transformed_segmented_image[tl_points[j][0]:br_points[j+1][0], tl_points[j][1]:br_points[j+1][1]]
+
+            chunk_show = np.array(chunk*255, dtype=np.uint8)
+            #plt.imshow(chunk_show)
+            #plt.show()
+
             flat_chunk = chunk.reshape(-1, 3)
-            unique, counts = np.unique(flat_chunk, return_counts=True)
+            unique, counts = np.unique(flat_chunk, return_counts=True, axis=0)
             mode = unique[np.argmax(counts)]
             colors[j][i] = mode
 
@@ -259,9 +264,11 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
         if np.abs(two - one) > e: return True
         return False
 
+    def in_bounds(array: np.ndarray, y: int, x: int) -> bool:
+        return 0 <= y < array.shape[0] and 0 <= x < array.shape[1]
+
     def get(array: np.ndarray, y: int, x: int) -> np.ndarray | None:
-        if 0 <= y <= array.shape[0]:
-            if 0 <= x <= array.shape[1]:
+        if in_bounds(array, y, x):
                 return array[y, x, :]
         return None
 
@@ -275,112 +282,88 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
         r = c1r - c2r
         g = c1g - c2g
         b = c1b - c2b
-        return math.sqrt((((512+rmean)*r*r) >> 8) + (4*g*g) + (((767-rmean)*b*b) >> 8))
+        return math.sqrt((int((512+rmean)*r*r) >> 8) + int(4*g*g) + (int((767-rmean)*b*b) >> 8))
+
+    e = 30
 
     background_squares: set[Tuple[int, int]] = set()
 
-    e = 20
-
-    # first, weed out the background squares
-    # All background squares are assumed to be a shade of white
-    for y in colors.shape[0]:
-        for x in colors.shape[1]:
-            color = colors[y, x, :]
-            if (np.abs(color[0] - color[1]) <= e) and (np.abs(color[1] - color[2]) <= e) and (np.abs(color[2] - color[0]) <= e):
+    # first, figure out what are the background squares
+    # All background squares are assumed to be a shade of white/gray/black
+    for y in range(colors.shape[0]):
+        for x in range(colors.shape[1]):
+            r,g,b = colors[y, x, :]
+            r,g,b = int(r), int(g), int(b)
+            if (np.abs(r - g) <= e) and (np.abs(g - b) <= e) and (np.abs(b - r) <= e):
                 background_squares.add((y, x))
-
-    closest_red = np.inf
-    goal_car = Car(0, 0, False, 2)
-    cars: list[Car] = []
-
-    for y in colors.shape[0]:
-        for x in colors.shape[1]:
-
-            if (y, x) in background_squares:
-                continue
-
-            color = colors[y, x, :]
-
-            closest_dist = np.inf
-            closest_offset = (0, 0)
-            closest_color = np.array([0, 0, 0], dtype=np.float64)
-            for offset in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                ny, nx = (y+offset[0], x+offset[1])
-
-                if (ny, nx) in background_squares:
-                    continue
-
-                color2 = get(colors, ny, nx)
-                dist = color_dist(color, color2)
-
-                if dist < closest_dist:
-                    closest_offset = offset
-                    closest_dist = dist
-                    closest_color = color2
-
-            if np.inf <= closest_dist:
-                # no second square found
-                continue
-
-            # second square found so check for third
-
-            nny, nnx = ny+closest_offset[0], nx+closest_offset[1]
-            color3 = get(colors, nny, nnx)
-
-            if color_dist(color2, color3) <= 10:
-                # include the third color
-                background_squares.add((y, x))
-                background_squares.add((ny, nx))
-                background_squares.add((nny, nnx))
-                car = Car(min(x, nx, nnx), min(y, ny, nny), closest_offset[0] != 0, 3)
-                if color_dist(closest_color, red) < closest_red:
-                    goal_car = car
-                cars.append(car)
-
-            else:
-                # car is only 2 squares long
-                background_squares.add((y, x))
-                background_squares.add((ny, nx))
-                car = Car(min(x, nx), min(y, ny), closest_offset[0] != 0, 2)
-                if color_dist(closest_color, red) < closest_red:
-                    goal_car = car
-                cars.append(car)
-
-    return Gameboard(goal_car, cars)
-
-def parse_into_game_board(img : Image):
-    """
-    Turn images into the internal gameboard representation.
-    """
-    # segment
-    gray_img = img.convert('L')
-    img = np.asarray(img)
-    handle_image(img, "input_image")
-    img = img_as_float(img[::2, ::2])
-    # segment
-    labels, segmented_img = segment_image(img)
-    segmented_img = np.array(segmented_img*255, dtype=np.uint8)
-    handle_image(segmented_img, "segmented_image")
+                colors[y, x, :] = 0
     
-    gray_img  = Image.fromarray(segmented_img).convert('L')
-    gray_img = np.array(gray_img, dtype=np.float32)
-    handle_image(gray_img, "gray_segmented_image")
+    cars: list[Car] = []
+    taken_squares: set[Tuple[int, int]] = set(background_squares)
+
+    # go through every point of the board
+    for y in range(colors.shape[0]):
+        for x in range(colors.shape[1]):
+
+            # if the square is already taken, then ignore it
+            p   = (y, x)
+            if p in taken_squares:
+                continue
+
+            possible_cars = []
+
+            # Get possible cars for square (y, x)
+            for h, oy, ox in [(False, 1, 0), (True, 0, 1)]:
+
+                pn  = (y+oy, x+ox)
+                pnn = (y+oy+oy, x+ox+ox)
+
+                if pn not in taken_squares and in_bounds(colors, *pn):
+
+                    if pnn not in taken_squares and in_bounds(colors, *pnn):
+                        possible_cars.append((h, (p, pn), (p, pn, pnn)))
+                    else:
+                        possible_cars.append((h, (p, pn), None))
+
+            if len(possible_cars) == 0:
+                # all cars out of bounds
+                continue
+
+            def car_key(c):
+                (y , x ) = c[1][0]
+                (yn, xn) = c[1][1]
+                return color_dist(colors[y, x], colors[yn, xn])
+
+            # sort cars by how far the first color is from the next color in the car
+            sorted_cars = sorted(possible_cars, key=car_key)
+
+            (h, car2, car3) = sorted_cars[0]
+
+            # check if car should be 3-long
+            car = car2
+            if car3 is not None:
+                (yn , xn ) = car3[1]
+                (ynn, xnn) = car3[2]
+                if color_dist(colors[yn, xn], colors[ynn, xnn]) <= 100:
+                    car = car3
+                
+            # update background squares so that later iterations do not use the values already in use
+            taken_squares = taken_squares.union(set(car))
+
+            # append the new car
+            cars.append(Car(car[0][1], car[0][0], h, len(car)))
+
+    #print("Background:")
+    #print(Gameboard.board_str([Car(x, y, True, 1) for (y, x) in background_squares]))
+
+    #print("Result:")
+    #print(Gameboard.board_str(cars))
+
+    s = sorted(cars, key=lambda c: color_dist(colors[c.y, c.x], red))
+    return Gameboard(None if len(s) == 0 else s[0], cars)
 
 
-    # warp image
-    square_img = normalize_board_square(segmented_img, gray_img)
-    handle_image(square_img, "warped_image")
-
-    # color chunks
-    colors = identify_colors_of_chunks(square_img)
-    colors = np.array(colors*255, dtype=np.uint8)
-    handle_image(colors, "6x6_pixel_image")
-
-    # board
-    board = board_from_colors(colors)
-    return board
-
-def generate_img_statistic(img : Image, expected_board : Gameboard):
+def generate_img_statistic(img : Image, expected_board : Gameboard, id : int):
     """
     given an image, and expected gameboard, parse the image. check if the gameboard matches the expected. 
     return time to complete and equality
@@ -392,41 +375,41 @@ def generate_img_statistic(img : Image, expected_board : Gameboard):
     # segment
     gray_img = img.convert('L')
     img = np.asarray(img)
-    handle_image(img, "input_image")
+    handle_image(img, f"input_image_{id}")
     img = img_as_float(img[::2, ::2])
 
     # segment
     labels, segmented_img = segment_image(img)
     segmented_img = np.array(segmented_img*255, dtype=np.uint8)
-    handle_image(segmented_img, "segmented_image")
+    handle_image(segmented_img, f"segmented_image_{id}")
     
     gray_img  = Image.fromarray(segmented_img).convert('L')
     gray_img = np.array(gray_img, dtype=np.float32)
-    handle_image(gray_img, "gray_segmented_image")
+    handle_image(gray_img, f"gray_segmented_image_{id}")
 
 
     # warp image
     square_img = normalize_board_square(segmented_img, gray_img)
-    handle_image(square_img, "warped_image")
+    handle_image(square_img, f"warped_image_{id}")
 
     # color chunks
     colors = identify_colors_of_chunks(square_img)
     colors = np.array(colors*255, dtype=np.uint8)
-    handle_image(colors, "6x6_pixel_image")
+    handle_image(colors, f"6x6_pixel_image_{id}")
 
     # board
     board = board_from_colors(colors)
 
     end = time.time()
-    time = end - start
+    total_time = end - start
     eq = board == expected_board
 
-    return eq, time
+    return eq, total_time
 
 
 def handle_image(img, title):
     plt.imshow(img)
-    plt.set_title(title)
+    plt.suptitle(title)
 
     if SAVE_IMGS:
         plt.savefig(f'outputs/{title}.png')

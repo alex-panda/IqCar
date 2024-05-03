@@ -15,30 +15,32 @@ def run_test_gameboard_1():
     blue = Car(4, 2, False, 3)
     orange = Car(5, 2, False, 3)
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[yellow, green, pink, blue, orange])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, yellow, green, pink, blue, orange])
 
-    files = []
+
+    img_nums = []
     imgs = []
     for i in range(13, 19):
         fn = f"IMG_{i}.png"
-        files.append(fn)
-        img = Image.open(fn)
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -73,31 +75,32 @@ def run_test_gameboard_2():
     c_15 = Car(5, 2, True, 2)
     c_16 = Car(5, 4, True, 2)
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11, c_12, c_13, c_14, c_15, c_16])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11, c_12, c_13, c_14, c_15, c_16])
 
-    files = []
+    img_nums = []
     imgs = []
     for i in range(20, 26):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -113,31 +116,32 @@ def run_test_gameboard_3():
     c_4 = Car(3, 1, True, 3)
     c_5 = Car(0, 3, False, 3)
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5])
 
-    files = [f"IMG_31_2.jpg"]
-    imgs = [Image.open(f"IMG_31_2.jpg")]
+    img_nums = [31]
+    imgs = [Image.open(f"data/IMG_31_2.jpg")]
     for i in range(26, 31):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -154,31 +158,32 @@ def run_test_gameboard_4():
     c_4 = Car(3, 1, True, 3)
     c_5 = Car(0, 3, False, 3)
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5])
 
-    files = []
+    img_nums = []
     imgs = []
     for i in range(31, 35):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -196,31 +201,32 @@ def run_test_gameboard_5():
     c_6 = Car(0, 5, False, 3)
     c_7 = Car(3, 3, False, 2)
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7])
 
-    files = []
+    img_nums = []
     imgs = []
     for i in range(35, 41):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -238,32 +244,32 @@ def run_test_gameboard_6():
     c_6 = Car(4, 0, False, 3) # orange
     c_7 = Car(4, 1, True, 2) # pink
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7])
 
-
-    files = []
+    img_nums = []
     imgs = []
     for i in range(42, 47):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -283,31 +289,32 @@ def run_test_gameboard_7():
     c_8 = Car(5, 4, True, 2) # blue
     c_9 = Car(3, 0, False, 2) # dark orange
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9])
 
-    files = []
+    img_nums = []
     imgs = []
     for i in range(47, 51):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -327,31 +334,32 @@ def run_test_gameboard_8():
     c_7 = Car(3, 5, False, 3) # light green
     c_8 = Car(4, 3, True, 2) # green
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8])
-
-    files = []
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8])
+    
+    img_nums = []
     imgs = []
     for i in range(51, 56):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done") 
 
     return data
 
@@ -369,31 +377,32 @@ def run_test_gameboard_9():
     c_6 = Car(2, 2, False, 2) # teal
     c_7 = Car(2, 3, False, 2) # dark orange
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7])
 
-    files = []
+    img_nums = []
     imgs = []
     for i in range(57, 62):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -411,31 +420,32 @@ def run_test_gameboard_10():
     c_6 = Car(1, 3, False, 2) # teal
     c_7 = Car(5, 1, True, 2) # dark orange
 
-    expected_board = Gameboard(goal_car=goal_car, cars=[c_1, c_2, c_3, c_4, c_5, c_6, c_7])
+    expected_board = Gameboard(goal_car=goal_car, cars=[goal_car, c_1, c_2, c_3, c_4, c_5, c_6, c_7])
 
-    files = []
+    img_nums = []
     imgs = []
     for i in range(62, 65):
         fn = f"IMG_{i}.jpg"
-        files.append(fn)
-        img = Image.open(fn)
-        img.rotate(90) # counter clockwise
+        img_nums.append(i)
+        img = Image.open(f"data/{fn}")
+        img = img.rotate(90) # counter clockwise
         imgs.append(img)
 
     data = []
-    for fn, img in zip(files, imgs):
+    for img_num, img in zip(img_nums, imgs):
         d = {}
         try:
-            eq, time = generate_img_statistic(img, expected_board)
-            d["img"] = fn
+            eq, time = generate_img_statistic(img, expected_board, img_num)
+            d["img"] = img_num
             d["board_matched"] = eq
             d["time"] = time
             data.append(d)
         except:
-            d["img"] = fn
+            d["img"] = img_num
             d["board_matched"] = False
             d["time"] = -1
             data.append(d)
+        print(f"IMG_{img_num} done")
 
     return data
 
@@ -448,17 +458,17 @@ def run_test_noisy():
 def run_tests():
 
     data = []
-    data.extend(run_test_gameboard_1())
-    dict_list_to_csv(data, "statistics.csv")
-    print("gameboard 1 done")
+    # data.extend(run_test_gameboard_1())
+    # dict_list_to_csv(data, "statistics.csv")
+    # print("gameboard 1 done")
 
-    data.extend(run_test_gameboard_2())
-    dict_list_to_csv(data, "statistics.csv")
-    print("gameboard 2 done")
+    # data.extend(run_test_gameboard_2())
+    # dict_list_to_csv(data, "statistics.csv")
+    # print("gameboard 2 done")
 
-    data.extend(run_test_gameboard_3())
-    dict_list_to_csv(data, "statistics.csv")
-    print("gameboard 3 done")
+    # data.extend(run_test_gameboard_3())
+    # dict_list_to_csv(data, "statistics.csv")
+    # print("gameboard 3 done")
 
     data.extend(run_test_gameboard_4())
     dict_list_to_csv(data, "statistics.csv")
@@ -496,11 +506,11 @@ def dict_list_to_csv(dict_list, filename):
     # Extract fieldnames from the keys of the first dictionary
     fieldnames = dict_list[0].keys()
     
-    with open(filename, 'w', newline='') as csvfile:
+    with open(filename, 'a', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         
         # Write the header row
-        writer.writeheader()
+        # writer.writeheader()
         
         # Write the data rows
         for data in dict_list:
