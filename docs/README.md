@@ -46,3 +46,19 @@ state, given a single input, and returns a sequence of moves which would solve t
 returns an error if the board is unsolvable.
 
 ## Results
+
+As it turns out, our system is very overfit for a handful of images. It does not generalize well at all. We took a testbed of about 50 images and 10 board arrangements and ran it through our system, checking if the goal board state was met by the system and how long it took. Virtually none of the images passed, aside from some from the set we tuned to as we worked through this project. In those board arrangements are included boards with a gray car which should be very difficult for our system to deal with, an entirely full board, along with some more “friendly” boards that should be easier for our system to effectively identify. 
+
+As an example, here is a set of images where our system worked out well NOTE: FIX IMAGES ONCE MERGE OF BRANCH HAPPENS:
+
+![An image of IQ car](./imgs/iq_car_example.png) 
+![An image of IQ car](./imgs/iq_car_example.png)
+![An image of IQ car](./imgs/iq_car_example.png)
+
+You can see that the segmentation is pretty good, the corners are detected fairly well and warp nicely, so that when it’s time to find the modal color of each chunk the grid is fairly well aligned. 
+
+Now consider this next example:
+
+\gameboard 4
+
+You can see that there is a huge amount of deviation in the final pixel arrangement, yet the original images are fairly close, to one another. But these small deviations from what is “expected” cause a range of cascading problems that lead to this huge variation throughout processing. 
