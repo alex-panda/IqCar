@@ -458,17 +458,17 @@ def run_test_noisy():
 def run_tests():
 
     data = []
-    # data.extend(run_test_gameboard_1())
-    # dict_list_to_csv(data, "statistics.csv")
-    # print("gameboard 1 done")
+    data.extend(run_test_gameboard_1())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 1 done")
 
-    # data.extend(run_test_gameboard_2())
-    # dict_list_to_csv(data, "statistics.csv")
-    # print("gameboard 2 done")
+    data.extend(run_test_gameboard_2())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 2 done")
 
-    # data.extend(run_test_gameboard_3())
-    # dict_list_to_csv(data, "statistics.csv")
-    # print("gameboard 3 done")
+    data.extend(run_test_gameboard_3())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 3 done")
 
     data.extend(run_test_gameboard_4())
     dict_list_to_csv(data, "statistics.csv")

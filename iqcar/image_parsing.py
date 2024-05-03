@@ -15,7 +15,7 @@ from iqcar.gameboard import Gameboard
 import time
 
 DEBUG = False
-SAVE_IMGS = True
+SAVE_IMGS = False
 SHOW_IMGS = False
 
 
