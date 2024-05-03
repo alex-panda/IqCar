@@ -591,8 +591,8 @@ def main(images: None | list[Image.Image] = None):
     gray_img  = Image.fromarray(segmented_img).convert('L')
     gray_img = np.array(gray_img, dtype=np.float64)
     # print(np.unique(gray_img))
-    plt.imshow(gray_img, cmap=cm.gray)
-    plt.show()
+    # plt.imshow(gray_img, cmap=cm.gray)
+    # plt.show()
 
     # warp image
     print("Warping image...")
