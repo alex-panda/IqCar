@@ -27,6 +27,7 @@ from iqcar.runTests import run_tests
 from iqcar.solver import BoardState
 
 GOAL_CAR_HEX = "FF0000"
+DEMO = True
 
 def IQCar():
     parser = argparse.ArgumentParser(
@@ -148,15 +149,10 @@ def edge_detection():
 
 def corner_detection(gray_img: np.ndarray):
     """Find corners of the game board"""
+    if DEMO: print("preforming corner detection...")
     thresh_min = threshold_otsu(gray_img)
     binary_img = gray_img > thresh_min
     binary_img = clean_binary_image(binary_img)
-
-    # Canny edge detection
-    sig = 12
-    l_thresh = 2
-    h_thresh = 10
-    edge_img = feature.canny(gray_img, sigma=sig, low_threshold=l_thresh, high_threshold=h_thresh)
 
     center_x, center_y = center_of_mass(binary_img)
     size_y, size_x = binary_img.shape
@@ -181,19 +177,44 @@ def corner_detection(gray_img: np.ndarray):
 
     coords = np.array([[tl_x, tl_y], [tr_x, tr_y], [bl_x, bl_y],[br_x, br_y]])
 
+    if DEMO:
+        plt.imshow(binary_img, cmap=cm.gray)
+        plt.plot(
+            center_x, center_y, color='cyan', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[0][0],coords[0][1], color='red', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[1][0],coords[1][1], color='green', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[2][0],coords[2][1], color='yellow', marker='o', linestyle='None', markersize=6
+        )
+        plt.plot(
+            coords[3][0],coords[3][1], color='pink', marker='o', linestyle='None', markersize=6
+        )
+        plt.suptitle("corner_detection")
+        plt.show()
+        plt.savefig("outputs/demo_corner_detection.png")
+
+
     return coords
 
 def clean_binary_image(binary_image, k=25):
     footprint = np.ones((k, k))
 
-    fig, ax = plt.subplots(1, 2)
+    if DEMO: print ("cleaning binary image...")
+    # fig, ax = plt.subplots(1, 3)
+    # ax[0].imshow(binary_image, cmap=cm.gray)
+    # ax[0].set_title('Before Cleaning')
     processed_img = erosion(binary_image, footprint=footprint)
-    # ax[0].imshow(processed_img, cmap=cm.gray)
-    # ax[0].set_title('After Erosion')
+    # ax[1].imshow(processed_img, cmap=cm.gray)
+    # ax[1].set_title('After Erosion')
 
     processed_img = dilation(processed_img, footprint=footprint)
-    # ax[1].imshow(processed_img, cmap=cm.gray)
-    # ax[1].set_title('After Dilation')
+    # ax[2].imshow(processed_img, cmap=cm.gray)
+    # ax[2].set_title('After Dilation')
 
     # plt.show()
     return processed_img
@@ -544,48 +565,55 @@ def test_main() -> float:
 
 def main(images: None | list[Image.Image] = None):
 
-    if images is None:
-        return test_main()
+    # if images is None:
+    #     return test_main()
 
-    images: list[np.ndarray] = [img_as_float(img) for img in images]
+    # images: list[np.ndarray] = [img_as_float(img) for img in images]
 
-    for (i, img) in enumerate(images):
-        if i != 15:
-            continue
+    # for (i, img) in enumerate(images):
+    #     if i != 18:
+    #         continue
 
-        #Image.fromarray(img).show()
+    #     #Image.fromarray(img).show()
 
-        print(f"Image {i}")
+    #     print(f"Image {i}")
 
-        # segment
-        _labels, segmented_img = segment_image(img)
-        segmented_img = np.array(segmented_img*255, dtype=np.uint8)
-        # plt.imshow(segmented_img)
-        # plt.show()
+    img = Image.open("data/IMG_18.png")
+    img  = np.asarray(img)
+    img = img_as_float(img[::2, ::2])
+    # segment
+    print("Segmenting image...")
+    _labels, segmented_img = segment_image(img)
+    segmented_img = np.array(segmented_img*255, dtype=np.uint8)
+    plt.imshow(segmented_img)
+    plt.show()
 
-        gray_img  = Image.fromarray(segmented_img).convert('L')
-        gray_img = np.array(gray_img, dtype=np.float64)
-        # print(np.unique(gray_img))
-        # plt.imshow(gray_img)
-        # plt.show()
+    gray_img  = Image.fromarray(segmented_img).convert('L')
+    gray_img = np.array(gray_img, dtype=np.float64)
+    # print(np.unique(gray_img))
+    plt.imshow(gray_img, cmap=cm.gray)
+    plt.show()
 
-        # warp image
-        square_img = normalize_board_square(segmented_img, gray_img)
-        # plt.imshow(square_img)
-        # plt.show()
+    # warp image
+    print("Warping image...")
+    square_img = normalize_board_square(segmented_img, gray_img)
+    plt.imshow(square_img)
+    plt.show()
 
-        # color chunks
-        colors = identify_colors_of_chunks(square_img)
-        colors = np.array(colors*255, dtype=np.uint8)
+    # color chunks
+    print("Identifying modal colors...")
+    colors = identify_colors_of_chunks(square_img)
+    colors = np.array(colors*255, dtype=np.uint8)
 
-        plt.imshow(colors)
-        plt.show()
+    plt.imshow(colors)
+    plt.show()
 
-        board = board_from_colors(colors)
-        print(board)
-        for b in board.into_state().solve():
-            new_gb = b.to_gameboard()
-            print(new_gb)
+    print("Extracting board...")
+    board = board_from_colors(colors)
+    print(board)
+    for b in board.into_state().solve():
+        new_gb = b.to_gameboard()
+        print(new_gb)
 
 def computeHomography(src_pts_nx2: np.ndarray, dest_pts_nx2: np.ndarray) -> np.ndarray:
     '''
