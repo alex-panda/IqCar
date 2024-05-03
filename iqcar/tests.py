@@ -1,3 +1,4 @@
+import csv
 from image_parsing import generate_img_statistic
 from car import Car 
 from gameboard import Gameboard
@@ -27,11 +28,17 @@ def run_test_gameboard_1():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -80,11 +87,17 @@ def run_test_gameboard_2():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -114,11 +127,17 @@ def run_test_gameboard_3():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -149,11 +168,17 @@ def run_test_gameboard_4():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -185,11 +210,17 @@ def run_test_gameboard_5():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -222,11 +253,17 @@ def run_test_gameboard_6():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -260,11 +297,17 @@ def run_test_gameboard_7():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -298,11 +341,17 @@ def run_test_gameboard_8():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -334,11 +383,17 @@ def run_test_gameboard_9():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -370,11 +425,17 @@ def run_test_gameboard_10():
     data = []
     for fn, img in zip(files, imgs):
         d = {}
-        eq, time = generate_img_statistic(img, expected_board)
-        d["img"] = fn
-        d["board_matched"] = eq
-        d["time"] = time
-        data.append(d)
+        try:
+            eq, time = generate_img_statistic(img, expected_board)
+            d["img"] = fn
+            d["board_matched"] = eq
+            d["time"] = time
+            data.append(d)
+        except:
+            d["img"] = fn
+            d["board_matched"] = False
+            d["time"] = -1
+            data.append(d)
 
     return data
 
@@ -383,3 +444,69 @@ def run_test_noisy():
     IMGS 65-68 (need to be rotated)
     """
     pass
+
+def run_tests():
+
+    data = []
+    data.extend(run_test_gameboard_1())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 1 done")
+
+    data.extend(run_test_gameboard_2())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 2 done")
+
+    data.extend(run_test_gameboard_3())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 3 done")
+
+    data.extend(run_test_gameboard_4())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 4 done")
+
+    data.extend(run_test_gameboard_5())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 5 done")
+
+    data.extend(run_test_gameboard_6())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 6 done")
+
+    data.extend(run_test_gameboard_7())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 7 done")
+
+    data.extend(run_test_gameboard_8())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 8 done")
+
+    data.extend(run_test_gameboard_9())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 9 done")
+
+    data.extend(run_test_gameboard_10())
+    dict_list_to_csv(data, "statistics.csv")
+    print("gameboard 10 done")
+
+def dict_list_to_csv(dict_list, filename):
+    if not dict_list:
+        print("Empty dictionary list. Nothing to write.")
+        return
+    
+    # Extract fieldnames from the keys of the first dictionary
+    fieldnames = dict_list[0].keys()
+    
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        # Write the header row
+        writer.writeheader()
+        
+        # Write the data rows
+        for data in dict_list:
+            writer.writerow(data)
+    
+    print(f"CSV file '{filename}' created successfully.")
+        
+
+run_tests()
