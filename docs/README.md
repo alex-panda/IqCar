@@ -90,7 +90,7 @@ The fourth set:
 
 You can see that there is a huge amount of deviation in the final pixel arrangement, yet the original images are fairly close, to one another. But these small deviations from what is “expected” cause a range of cascading problems that lead to this huge variation throughout processing. 
 
-## Demos
+## Demo
 
 We start by taking a picture of the board we want to solve.
 
