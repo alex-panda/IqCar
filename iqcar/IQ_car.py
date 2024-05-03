@@ -30,7 +30,7 @@ GOAL_CAR_HEX = "FF0000"
 DEMO = True
 
 # CHANGE THIS IF YOU WANT TO RUN ON ALL IMAGES
-IMG_18 = False
+IMG_18 = True
 
 def IQCar():
     parser = argparse.ArgumentParser(
