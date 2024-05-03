@@ -51,38 +51,38 @@ As it turns out, our system is very overfit for a handful of images. It does not
 
 As an example, here is a set of images where our system worked out well:
 
-![Image 18 input](../outputs/input_image_18.png) 
-![Segmentation](../outputs/segmented_image_18.png)
-![Warping](../outputs/warped_image_18.png)
-![Final 6x6 pixel array](../outputs/6x6_pixel_image_18.png)
+![Image 18 input](./outputs/input_image_18.png) 
+![Segmentation](./outputs/segmented_image_18.png)
+![Warping](./outputs/warped_image_18.png)
+![Final 6x6 pixel array](./outputs/6x6_pixel_image_18.png)
 
 You can see that the segmentation is pretty good, the corners are detected fairly well and warp nicely, so that when it’s time to find the modal color of each chunk the grid is fairly well aligned. 
 
 Now consider this next example. All of the sets of images are of the same gameboard arrangement, but taken from different angles. 
 
 The first set:
-![Image 31 input](../outputs/input_image_31.png) 
-![Segmentation](../outputs/segmented_image_31.png)
-![Warping](../outputs/warped_image_31.png)
-![Final 6x6 pixel array](../outputs/6x6_pixel_image_31.png)
+![Image 31 input](./outputs/input_image_31.png) 
+![Segmentation](./outputs/segmented_image_31.png)
+![Warping](./outputs/warped_image_31.png)
+![Final 6x6 pixel array](./outputs/6x6_pixel_image_31.png)
 
 The second set:
-![Image 32 input](../outputs/input_image_32.png) 
-![Segmentation](../outputs/segmented_image_32.png)
-![Warping](../outputs/warped_image_32.png)
-![Final 6x6 pixel array](../outputs/6x6_pixel_image_32.png)
+![Image 32 input](./outputs/input_image_32.png) 
+![Segmentation](./outputs/segmented_image_32.png)
+![Warping](./outputs/warped_image_32.png)
+![Final 6x6 pixel array](./outputs/6x6_pixel_image_32.png)
 
 The third set:
-![Image 33 input](../outputs/input_image_33.png) 
-![Segmentation](../outputs/segmented_image_33.png)
-![Warping](../outputs/warped_image_33.png)
-![Final 6x6 pixel array](../outputs/6x6_pixel_image_33.png)
+![Image 33 input](./outputs/input_image_33.png) 
+![Segmentation](./outputs/segmented_image_33.png)
+![Warping](./outputs/warped_image_33.png)
+![Final 6x6 pixel array](./outputs/6x6_pixel_image_33.png)
 
 The fourth set:
-![Image 34 input](../outputs/input_image_34.png) 
-![Segmentation](../outputs/segmented_image_34.png)
-![Warping](../outputs/warped_image_34.png)
-![Final 6x6 pixel array](../outputs/6x6_pixel_image_34.png)
+![Image 34 input](./outputs/input_image_34.png) 
+![Segmentation](./outputs/segmented_image_34.png)
+![Warping](./outputs/warped_image_34.png)
+![Final 6x6 pixel array](./outputs/6x6_pixel_image_34.png)
 
 You can see that there is a huge amount of deviation in the final pixel arrangement, yet the original images are fairly close, to one another. But these small deviations from what is “expected” cause a range of cascading problems that lead to this huge variation throughout processing. 
 
