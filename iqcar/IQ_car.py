@@ -1,5 +1,6 @@
 import argparse
 import math
+import os
 from typing import Tuple
 
 import matplotlib.pyplot as plt
@@ -23,6 +24,7 @@ from scipy import stats
 from iqcar.car import Car
 from iqcar.gameboard import Gameboard
 from iqcar.runTests import run_tests
+from iqcar.solver import BoardState
 
 GOAL_CAR_HEX = "FF0000"
 
@@ -40,7 +42,7 @@ def IQCar():
         'edge_detection' : edge_detection,
         'corner_detection' : corner_detection,
         'segmentation' : segmentation,
-        'full_stack' : parse_into_game_board
+        'main' : main,
     }
     run_tests(args.function_name, fun_handles)
 
@@ -261,8 +263,6 @@ def identify_colors_of_chunks(transformed_segmented_image : np.array):
 
     return colors
 
-
-
 def bounding_box_mask(x1, y1, x2, y2, img):
     # Create an empty binary mask
     mask = np.zeros_like(img, dtype=np.int8)
@@ -300,7 +300,7 @@ def segmentation():
     plt.savefig(f'outputs/segmentation_14.png')
     plt.show()
 
-def segment_image(img : np.array, num_seg = 250, compact = 10):
+def segment_image(img : np.ndarray, num_seg = 250, compact = 10):
     """
     params np.array image
     returns labels, segmented img average color
@@ -312,9 +312,8 @@ def segment_image(img : np.array, num_seg = 250, compact = 10):
     # Converts a label image into
     # an RGB color image for visualizing
     # the labeled regions. 
-    img_2 = label2rgb(segments_slic,
-                        img,
-                        kind = 'avg')
+    img_2 = label2rgb(segments_slic, img, kind='avg')
+
     return segments_slic, img_2
 
 def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray, buffer=3) -> np.ndarray:
@@ -335,42 +334,6 @@ def normalize_board_square(segmented_img: np.ndarray, gray_img: np.ndarray, buff
     square_img = warp(segmented_img, ProjectiveTransform(matrix=np.linalg.inv(hom)))
     return square_img[buffer:sidelen-buffer, buffer:sidelen-buffer]
 
-def parse_into_game_board():
-    """
-    Turn images into the internal gameboard representation.
-    """
-    # segment
-    img = Image.open('data/IMG_18.png')
-    gray_img = img.convert('L')
-    img = np.asarray(img)
-    img = img_as_float(img[::2, ::2])
-    # segment
-    _labels, segmented_img = segment_image(img)
-    segmented_img = np.array(segmented_img*255, dtype=np.uint8)
-    # plt.imshow(segmented_img)
-    # plt.show()
-    
-    gray_img  = Image.fromarray(segmented_img).convert('L')
-    gray_img = np.array(gray_img, dtype=np.float32)
-    # print(np.unique(gray_img))
-    # plt.imshow(gray_img)
-    # plt.show()
-    
-
-    # warp image
-    square_img = normalize_board_square(segmented_img, gray_img)
-    # plt.imshow(square_img)
-    # plt.show()
-
-    # color chunks
-    colors = identify_colors_of_chunks(square_img)
-    colors = np.array(colors*255, dtype=np.uint8)
-
-    #plt.imshow(colors)
-    #plt.show()
-
-    return board_from_colors(colors)
-
 def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
     """
     Creates a gameboard from the given colors.
@@ -386,19 +349,8 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
     """
     red = np.array([240, 70, 50], dtype=np.float64)
 
-    def is_eq(one: np.ndarray | None, two: np.ndarray | None, e: float) -> bool:
-        if one is None: return False
-        if two is None: return False
-        if np.abs(two - one) > e: return True
-        return False
-
     def in_bounds(array: np.ndarray, y: int, x: int) -> bool:
         return 0 <= y < array.shape[0] and 0 <= x < array.shape[1]
-
-    def get(array: np.ndarray, y: int, x: int) -> np.ndarray | None:
-        if in_bounds(array, y, x):
-                return array[y, x, :]
-        return None
 
     def color_dist(color1: np.ndarray | None, color2: np.ndarray | None) -> float:
         if color1 is None: return np.inf
@@ -488,7 +440,66 @@ def board_from_colors(colors: np.ndarray[np.uint8]) -> Gameboard:
     #print(Gameboard.board_str(cars))
 
     s = sorted(cars, key=lambda c: color_dist(colors[c.y, c.x], red))
+    #if len(s) > 0:
+    #    print(s[0] is cars[2])
     return Gameboard(None if len(s) == 0 else s[0], cars)
+
+def test_main() -> float:
+    import re
+    f = re.compile('[0123456789]+')
+    def key(file):
+        ints = f.findall(file)
+        if len(ints) == 0:
+            return np.inf
+        return float(ints[0])
+
+    main([
+        Image.open(os.path.join('.', 'data', file))
+        for file in sorted(os.listdir(os.path.join('.', 'data')), key=key)
+    ])
+
+def main(images: None | list[Image.Image] = None):
+
+    if images is None:
+        return test_main()
+
+    images: list[np.ndarray] = [img_as_float(img) for img in images]
+
+    for (i, img) in enumerate(images):
+        if i < 17:
+            continue
+
+        #Image.fromarray(img).show()
+
+        print(f"Image {i}")
+
+        # segment
+        _labels, segmented_img = segment_image(img)
+        segmented_img = np.array(segmented_img*255, dtype=np.uint8)
+        # plt.imshow(segmented_img)
+        # plt.show()
+
+        gray_img  = Image.fromarray(segmented_img).convert('L')
+        gray_img = np.array(gray_img, dtype=np.float64)
+        # print(np.unique(gray_img))
+        # plt.imshow(gray_img)
+        # plt.show()
+
+        # warp image
+        square_img = normalize_board_square(segmented_img, gray_img)
+        # plt.imshow(square_img)
+        # plt.show()
+
+        # color chunks
+        colors = identify_colors_of_chunks(square_img)
+        colors = np.array(colors*255, dtype=np.uint8)
+
+        plt.imshow(colors)
+        plt.show()
+
+        board = board_from_colors(colors)
+        print(board)
+        print([b.to_string() for b in board.into_state().solve()])
 
 def computeHomography(src_pts_nx2: np.ndarray, dest_pts_nx2: np.ndarray) -> np.ndarray:
     '''
