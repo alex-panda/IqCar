@@ -262,7 +262,7 @@ class BoardState:
     def __str__(self):
         return self.to_string()
 
-    def solve(self) -> list[bitboard]:
+    def solve(self) -> list['BoardState']:
         """Solve an IQCar puzzle.
 
         Simply do breadth-first search over the game state space for a valid
@@ -279,7 +279,7 @@ class BoardState:
                 path = []
                 p: Optional[BoardState] = curr
                 while p is not None:
-                    path.append(p.state)
+                    path.append(p)
                     p = paths[p]
                 path.reverse()
                 return path
