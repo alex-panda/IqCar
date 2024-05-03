@@ -2,9 +2,9 @@
 
 By Casey Ford, Alex Peseckis, Jack Stanek
 
-![Presentation Link](./CS%20766%20Computer%20Vision%20Project.pdf)
+[Presentation Link](./CS%20766%20Computer%20Vision%20Project.pdf)
 
-![GitHub Repo](https://github.com/alex-panda/IqCar)
+[GitHub Repo](https://github.com/alex-panda/IqCar)
 
 ## Introduction
 
